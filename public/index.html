@@ -175,3 +175,123 @@ onclick="joinRoom()">
 </p>
 
 </div>
+    <!-- اتاق انتظار -->
+
+<div id="lobby" class="hidden">
+
+<h1>⏳ اتاق بازی</h1>
+
+<div class="room">
+
+<div>کد اتاق:</div>
+
+<div class="code" id="roomCode"></div>
+
+<button
+class="main"
+onclick="shareRoom()">
+
+📤 دعوت از دوست
+
+</button>
+
+</div>
+
+<div
+class="players"
+id="players">
+</div>
+
+<div
+class="status"
+id="waiting">
+
+منتظر بازیکن دوم...
+
+</div>
+
+</div>
+
+
+<!-- صفحه بازی -->
+
+<div
+id="gameScreen"
+class="hidden">
+
+<h1>⚔️ نبرد اطلاعات عمومی</h1>
+
+<div class="players">
+
+<div
+class="player"
+id="player1">
+
+بازیکن ۱
+<br>
+⭐ 0
+
+</div>
+
+<div
+class="player"
+id="player2">
+
+بازیکن ۲
+<br>
+⭐ 0
+
+</div>
+
+</div>
+
+<div
+class="small"
+id="number">
+</div>
+
+<div
+class="question"
+id="question">
+</div>
+
+<div id="answers">
+</div>
+
+<div
+class="status"
+id="status">
+</div>
+
+</div>
+
+
+<!-- صفحه نتیجه -->
+
+<div
+id="result"
+class="hidden">
+
+<h1>🏆 پایان بازی</h1>
+
+<h2
+id="winner"
+style="text-align:center">
+</h2>
+
+<div
+id="finalScore"
+style="text-align:center">
+</div>
+
+<button
+class="main"
+onclick="location.reload()">
+
+🔄 بازی دوباره
+
+</button>
+
+</div>
+
+</div>
