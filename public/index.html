@@ -411,7 +411,7 @@ function joinRoom() {
 
     };
 
-}
+
 
 
 function handleMessage(data) {
@@ -509,27 +509,54 @@ if (data.type === "timeUp") {
             "⏱️ " + data.time;
 
         }
-        
-    if (data.type === "answerReceived") {
+function handleMessage(data) {
 
-        document.getElementById("status")
-            .innerText =
-            "✅ جواب ثبت شد؛ منتظر حریف...";
+    if (data.type === "roomCreated") {
+
+        roomCode = data.room;
+
+        document.getElementById("roomCode").innerText = roomCode;
+
+        showPage("lobby");
+    }
+
+    if (data.type === "players") {
+
+        document.getElementById("waiting").innerText =
+            "بازیکن دوم وارد شد! بازی شروع می‌شود...";
 
     }
-    if (data.type === "timeUp") {
 
-        const timer =
-            document.getElementById("timer");
+    if (data.type === "question") {
+
+        showQuestion(data);
+
+        const timer = document.getElementById("timer");
 
         if (timer) {
-
-            timer.innerText =
-                "⏰ زمان تمام شد!";
-
+            timer.innerText = "⏱️ " + (data.time || 15);
         }
-
     }
+
+    if (data.type === "timer") {
+
+        const timer = document.getElementById("timer");
+
+        if (timer) {
+            timer.innerText = "⏱️ " + data.time;
+        }
+    }
+
+    if (data.type === "timeUp") {
+
+        const timer = document.getElementById("timer");
+
+        if (timer) {
+            timer.innerText = "⏰ زمان تمام شد!";
+        }
+    }
+}
+        
 
     if (data.type === "result") {
 
