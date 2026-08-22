@@ -259,6 +259,7 @@ font-weight:bold;
 margin:10px;
 ">
 ⏱️ 15
+    
 </div>
 <div
 class="question"
@@ -482,6 +483,18 @@ if (data.type === "timer") {
     }
 
     }
+    if (data.type === "timer") {
+
+    const timer =
+        document.getElementById("timer");
+
+    if (timer) {
+
+        timer.innerText =
+            "⏱️ " + data.time;
+
+        }
+        
     if (data.type === "answerReceived") {
 
         document.getElementById("status")
@@ -489,7 +502,19 @@ if (data.type === "timer") {
             "✅ جواب ثبت شد؛ منتظر حریف...";
 
     }
+    if (data.type === "timeUp") {
 
+        const timer =
+            document.getElementById("timer");
+
+        if (timer) {
+
+            timer.innerText =
+                "⏰ زمان تمام شد!";
+
+        }
+
+    }
 
     if (data.type === "result") {
 
