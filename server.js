@@ -83,15 +83,17 @@ function broadcast(room, data) {
         send(player.ws, data);
 
     });
+    
 
 }
-
 function sendQuestion(room) {
 
-    const question =
-        questions[room.question];
+    const question = questions[room.question];
 
     room.answers = {};
+
+    // زمان سؤال: 15 ثانیه
+    room.timeLeft = 15;
 
     broadcast(room, {
 
@@ -103,10 +105,85 @@ function sendQuestion(room) {
 
         question: question.q,
 
-        answers: question.a
+        answers: question.a,
+
+        time: room.timeLeft
 
     });
 
+    // تایمر سرور
+    if (room.timer) {
+        clearInterval(room.timer);
+    }
+
+    room.timer = setInterval(function() {
+
+        room.timeLeft--;
+
+        broadcast(room, {
+
+            type: "timer",
+
+            time: room.timeLeft
+
+        });
+
+        // تمام شدن زمان
+        if (room.timeLeft <= 0) {
+
+            clearInterval(room.timer);
+
+            room.timer = null;
+
+            broadcast(room, {
+
+                type: "timeUp"
+
+            });
+
+            // اگر هر دو بازیکن جواب داده باشند
+            if (Object.keys(room.answers).length >= 2) {
+
+                nextQuestion(room);
+
+            }
+
+        }
+
+    }, 1000);
+function nextQuestion(room) {
+
+    if (room.timer) {
+
+        clearInterval(room.timer);
+
+        room.timer = null;
+
+    }
+
+    room.question++;
+
+    if (room.question >= questions.length) {
+
+        broadcast(room, {
+
+            type: "gameOver",
+
+            scores: room.players.map(function(player) {
+
+                return player.score;
+
+            })
+
+        });
+
+        return;
+
+    }
+
+    sendQuestion(room);
+
+}
 }
 
 wss.on("connection", function(ws) {
