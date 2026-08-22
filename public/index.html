@@ -411,8 +411,7 @@ function joinRoom() {
 
     };
 
-
-
+        }
 
 function handleMessage(data) {
 
@@ -508,8 +507,7 @@ if (data.type === "timeUp") {
         timer.innerText =
             "⏱️ " + data.time;
 
-        }
-function handleMessage(data) {
+        function handleMessage(data) {
 
     if (data.type === "roomCreated") {
 
@@ -555,8 +553,6 @@ function handleMessage(data) {
             timer.innerText = "⏰ زمان تمام شد!";
         }
     }
-}
-        
 
     if (data.type === "result") {
 
@@ -564,13 +560,11 @@ function handleMessage(data) {
 
     }
 
-
     if (data.type === "gameOver") {
 
         showGameOver(data);
 
     }
-
 
     if (data.type === "error") {
 
@@ -578,15 +572,15 @@ function handleMessage(data) {
 
     }
 
-
     if (data.type === "opponentLeft") {
 
         alert("بازیکن مقابل از بازی خارج شد.");
 
     }
 
-}
-
+        }
+        
+function handleMessage(data) {
 
 function showQuestion(data) {
 
@@ -828,3 +822,4 @@ async function shareRoom() {
 
 </body>
 </html>
+
