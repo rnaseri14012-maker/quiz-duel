@@ -321,7 +321,6 @@ function getName() {
 
 }
 
-
 function connect() {
 
     const protocol =
@@ -390,6 +389,7 @@ function joinRoom() {
         return;
 
     }
+    
 
 
     roomCode = code;
@@ -435,14 +435,28 @@ function handleMessage(data) {
             .innerText =
             "بازیکن دوم وارد شد! بازی شروع می‌شود...";
 
-    }
+    
 
 
     if (data.type === "question") {
 
-        showQuestion(data);
+if (data.type === "timer") {
+
+    const timer =
+        document.getElementById("timer");
+
+    if (timer) {
+
+        timer.innerText =
+            "⏱️ " + data.time;
 
     }
+if (data.type === "question") {
+
+    showQuestion(data);
+
+}
+
 if (data.type === "timer") {
 
     const timer =
@@ -456,7 +470,8 @@ if (data.type === "timer") {
     }
 
 }
-if (data.type === "timer") {
+
+if (data.type === "timeUp") {
 
     const timer =
         document.getElementById("timer");
@@ -464,11 +479,11 @@ if (data.type === "timer") {
     if (timer) {
 
         timer.innerText =
-            "⏱️ " + data.time;
+            "⏰ زمان تمام شد!";
 
     }
 
-            } 
+}
 
     if (data.type === "timeUp") {
 
