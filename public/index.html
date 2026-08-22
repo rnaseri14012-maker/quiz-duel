@@ -232,6 +232,7 @@ id="player1">
 ⭐ 0
 
 </div>
+    
 
 <div
 class="player"
@@ -367,6 +368,7 @@ function createRoom() {
         }));
 
     };
+    
 
 }
 
@@ -440,8 +442,46 @@ function handleMessage(data) {
         showQuestion(data);
 
     }
+if (data.type === "timer") {
 
+    const timer =
+        document.getElementById("timer");
 
+    if (timer) {
+
+        timer.innerText =
+            "⏱️ " + data.time;
+
+    }
+
+}
+if (data.type === "timer") {
+
+    const timer =
+        document.getElementById("timer");
+
+    if (timer) {
+
+        timer.innerText =
+            "⏱️ " + data.time;
+
+    }
+
+            } 
+
+    if (data.type === "timeUp") {
+
+    const timer =
+        document.getElementById("timer");
+
+    if (timer) {
+
+        timer.innerText =
+            "⏰ زمان تمام شد!";
+
+    }
+
+    }
     if (data.type === "answerReceived") {
 
         document.getElementById("status")
