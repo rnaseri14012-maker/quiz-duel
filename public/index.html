@@ -295,3 +295,420 @@ onclick="location.reload()">
 </div>
 
 </div>
+    <script>
+
+let socket = null;
+let roomCode = "";
+let answered = false;
+
+function getName() {
+
+    const name =
+        document.getElementById("name").value.trim();
+
+    return name || "بازیکن";
+
+}
+
+
+function connect() {
+
+    const protocol =
+        location.protocol === "https:"
+        ? "wss:"
+        : "ws:";
+
+    socket =
+        new WebSocket(
+            protocol + "//" + location.host
+        );
+
+
+    socket.onmessage = function(event) {
+
+        const data =
+            JSON.parse(event.data);
+
+        handleMessage(data);
+
+    };
+
+
+    socket.onerror = function() {
+
+        alert("خطا در اتصال به سرور.");
+
+    };
+
+}
+
+
+function createRoom() {
+
+    connect();
+
+    socket.onopen = function() {
+
+        socket.send(JSON.stringify({
+
+            type: "create",
+
+            name: getName()
+
+        }));
+
+    };
+
+}
+
+
+function joinRoom() {
+
+    const code =
+        document.getElementById("room")
+        .value
+        .trim()
+        .toUpperCase();
+
+
+    if (!code) {
+
+        alert("کد اتاق را وارد کن.");
+
+        return;
+
+    }
+
+
+    roomCode = code;
+
+    connect();
+
+
+    socket.onopen = function() {
+
+        socket.send(JSON.stringify({
+
+            type: "join",
+
+            room: code,
+
+            name: getName()
+
+        }));
+
+    };
+
+}
+
+
+function handleMessage(data) {
+
+
+    if (data.type === "roomCreated") {
+
+        roomCode = data.room;
+
+        document.getElementById("roomCode")
+            .innerText = roomCode;
+
+        showPage("lobby");
+
+    }
+
+
+    if (data.type === "players") {
+
+        document.getElementById("waiting")
+            .innerText =
+            "بازیکن دوم وارد شد! بازی شروع می‌شود...";
+
+    }
+
+
+    if (data.type === "question") {
+
+        showQuestion(data);
+
+    }
+
+
+    if (data.type === "answerReceived") {
+
+        document.getElementById("status")
+            .innerText =
+            "✅ جواب ثبت شد؛ منتظر حریف...";
+
+    }
+
+
+    if (data.type === "result") {
+
+        showResult(data);
+
+    }
+
+
+    if (data.type === "gameOver") {
+
+        showGameOver(data);
+
+    }
+
+
+    if (data.type === "error") {
+
+        alert(data.message);
+
+    }
+
+
+    if (data.type === "opponentLeft") {
+
+        alert("بازیکن مقابل از بازی خارج شد.");
+
+    }
+
+}
+
+
+function showQuestion(data) {
+
+    showPage("gameScreen");
+
+    answered = false;
+
+
+    document.getElementById("number")
+        .innerText =
+        "سؤال " +
+        data.number +
+        " از " +
+        data.total;
+
+
+    document.getElementById("question")
+        .innerText =
+        data.question;
+
+
+    const box =
+        document.getElementById("answers");
+
+
+    box.innerHTML = "";
+
+
+    data.answers.forEach(function(answer, index) {
+
+        const button =
+            document.createElement("button");
+
+
+        button.className = "answer";
+
+        button.innerText = answer;
+
+
+        button.onclick = function() {
+
+            sendAnswer(index, button);
+
+        };
+
+
+        box.appendChild(button);
+
+    });
+
+
+    document.getElementById("status")
+        .innerText =
+        "جوابت را انتخاب کن.";
+
+}
+
+
+function sendAnswer(index, button) {
+
+    if (answered) return;
+
+    answered = true;
+
+
+    const buttons =
+        document.querySelectorAll(".answer");
+
+
+    buttons.forEach(function(btn) {
+
+        btn.disabled = true;
+
+    });
+
+
+    button.classList.add("wrong");
+
+
+    socket.send(JSON.stringify({
+
+        type: "answer",
+
+        answer: index
+
+    }));
+
+
+    document.getElementById("status")
+        .innerText =
+        "⏳ منتظر جواب حریف...";
+
+}
+
+
+function showResult(data) {
+
+    const buttons =
+        document.querySelectorAll(".answer");
+
+
+    buttons.forEach(function(button, index) {
+
+        if (index === data.correct) {
+
+            button.classList.remove("wrong");
+
+            button.classList.add("correct");
+
+        }
+
+    });
+
+
+    updateScores(data.scores);
+
+
+    document.getElementById("status")
+        .innerText =
+        "✅ نتیجه مشخص شد.";
+
+}
+
+
+function updateScores(scores) {
+
+    document.getElementById("player1")
+        .innerHTML =
+        "👤 بازیکن ۱<br>⭐ " +
+        scores[0];
+
+
+    document.getElementById("player2")
+        .innerHTML =
+        "👤 بازیکن ۲<br>⭐ " +
+        scores[1];
+
+}
+
+
+function showGameOver(data) {
+
+    showPage("result");
+
+
+    let winner;
+
+
+    if (data.scores[0] > data.scores[1]) {
+
+        winner = "🏆 بازیکن ۱ برنده شد!";
+
+    }
+
+    else if (data.scores[1] > data.scores[0]) {
+
+        winner = "🏆 بازیکن ۲ برنده شد!";
+
+    }
+
+    else {
+
+        winner = "🤝 بازی مساوی شد!";
+
+    }
+
+
+    document.getElementById("winner")
+        .innerText = winner;
+
+
+    document.getElementById("finalScore")
+        .innerHTML =
+        "بازیکن ۱: " +
+        data.scores[0] +
+        " امتیاز<br><br>" +
+        "بازیکن ۲: " +
+        data.scores[1] +
+        " امتیاز";
+
+}
+
+
+function showPage(page) {
+
+    document.getElementById("home")
+        .classList.add("hidden");
+
+    document.getElementById("lobby")
+        .classList.add("hidden");
+
+    document.getElementById("gameScreen")
+        .classList.add("hidden");
+
+    document.getElementById("result")
+        .classList.add("hidden");
+
+
+    document.getElementById(page)
+        .classList.remove("hidden");
+
+}
+
+
+async function shareRoom() {
+
+    const url =
+        location.origin +
+        "?room=" +
+        roomCode;
+
+
+    if (navigator.share) {
+
+        await navigator.share({
+
+            title: "نبرد اطلاعات عمومی",
+
+            text: "بیا با من بازی کن 🎮",
+
+            url: url
+
+        });
+
+    }
+
+    else {
+
+        await navigator.clipboard
+            .writeText(url);
+
+        alert("لینک بازی کپی شد.");
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>
