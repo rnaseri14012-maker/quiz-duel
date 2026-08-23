@@ -1,5 +1,4 @@
 const express = require("express");
-
 const http = require("http");
 const { Server } = require("socket.io");
 
@@ -11,301 +10,530 @@ app.use(express.static("public"));
 
 const rooms = new Map();
 
-const PATH_LENGTH = 52;
-const FINISH = 56;
 const HOME = -1;
+const FINISH = 56;
+const MAIN_PATH = 52;
 
 const COLORS = ["red", "blue"];
 
+const ALLOWED_EMOJIS = [
+    "😂", "😎", "🔥", "😱", "👏", "😍",
+    "🎉", "😭", "🤣", "😡", "👍", "❤️", "🎲"
+];
+
+
 function createRoomCode() {
+
     let code;
 
     do {
+
         code = Math.random()
             .toString(36)
-            .substring(2, 8)
+            .slice(2, 8)
             .toUpperCase();
+
     } while (rooms.has(code));
 
     return code;
 }
 
+
 function createPlayer(socket, name, color) {
+
     return {
+
+        socket,
         socketId: socket.id,
-        name: name || "بازیکن",
+
+        name:
+            name || "بازیکن",
+
         color,
-        pieces: [HOME, HOME, HOME, HOME]
+
+        pieces: [
+            HOME,
+            HOME,
+            HOME,
+            HOME
+        ]
+
     };
 }
 
-function send(socket, type, data = {}) {
-    if (socket && socket.connected) {
-        socket.emit(type, data);
-    }
-}
-
-function broadcast(room, type, data = {}) {
-    room.players.forEach(player => {
-        send(player.socket, type, data);
-    });
-}
 
 function getRoom(socket) {
-    return rooms.get(socket.data.roomCode);
+
+    return rooms.get(
+        socket.data.roomCode
+    );
+
 }
+
 
 function getPlayerIndex(socket) {
+
     return socket.data.playerIndex;
+
 }
 
-function getOpponentIndex(playerIndex) {
-    return playerIndex === 0 ? 1 : 0;
+
+function opponentIndex(index) {
+
+    return index === 0 ? 1 : 0;
+
 }
 
-function isFinished(player) {
+
+function emitTo(
+    socket,
+    event,
+    data = {}
+) {
+
+    if (
+        socket &&
+        socket.connected
+    ) {
+
+        socket.emit(
+            event,
+            data
+        );
+
+    }
+
+}
+
+
+function broadcast(
+    room,
+    event,
+    data = {}
+) {
+
+    for (
+        const player of room.players
+    ) {
+
+        emitTo(
+            player.socket,
+            event,
+            data
+        );
+
+    }
+
+}
+
+
+function isWinner(player) {
+
     return player.pieces.every(
-        position => position === FINISH
+        position =>
+            position === FINISH
     );
+
 }
 
-function canMove(room, playerIndex, pieceIndex) {
-    const player = room.players[playerIndex];
 
-    if (!player) {
+function canMove(
+    room,
+    playerIndex,
+    pieceIndex
+) {
+
+    if (
+        !room.started ||
+        room.dice === null
+    ) {
+
         return false;
+
     }
 
-    const dice = room.dice;
-    const position = player.pieces[pieceIndex];
 
-    if (dice === null) {
+    const player =
+        room.players[playerIndex];
+
+
+    if (
+        !player ||
+        !Number.isInteger(pieceIndex) ||
+        pieceIndex < 0 ||
+        pieceIndex > 3
+    ) {
+
         return false;
+
     }
 
-    if (position === FINISH) {
+
+    const position =
+        player.pieces[pieceIndex];
+
+
+    if (
+        position === FINISH
+    ) {
+
         return false;
+
     }
 
-    // مهره داخل خانه فقط با 6 بیرون می‌آید
-    if (position === HOME) {
-        return dice === 6;
+
+    /*
+    مهره داخل خانه
+    فقط با ۶ بیرون می‌آید
+    */
+
+    if (
+        position === HOME
+    ) {
+
+        return room.dice === 6;
+
     }
 
-    return position + dice <= FINISH;
-}
 
-function hasMovablePiece(room, playerIndex) {
-    const player = room.players[playerIndex];
+    /*
+    جلوگیری از رد شدن
+    از خانه پایانی
+    */
 
-    if (!player || room.dice === null) {
-        return false;
-    }
-
-    return player.pieces.some(
-        (_, index) =>
-            canMove(room, playerIndex, index)
+    return (
+        position +
+        room.dice <=
+        FINISH
     );
+
 }
+
+
+function hasMovablePiece(
+    room,
+    playerIndex
+) {
+
+    return [
+        0,
+        1,
+        2,
+        3
+    ].some(
+        index =>
+            canMove(
+                room,
+                playerIndex,
+                index
+            )
+    );
+
+}
+
 
 function sendState(room) {
 
-    room.players.forEach((player, index) => {
+    room.players.forEach(
+        (
+            player,
+            index
+        ) => {
 
-        const opponent =
-            room.players[getOpponentIndex(index)];
+            const opponent =
+                room.players[
+                    opponentIndex(index)
+                ];
 
-        send(player.socket, "gameState", {
 
-            roomCode: room.code,
+            emitTo(
+                player.socket,
+                "gameState",
+                {
 
-            myColor: player.color,
+                    roomCode:
+                        room.code,
 
-            myName: player.name,
+                    myColor:
+                        player.color,
 
-            opponentName:
-                opponent
-                    ? opponent.name
-                    : "در انتظار بازیکن",
+                    myName:
+                        player.name,
 
-            myPieces: [...player.pieces],
+                    opponentName:
+                        opponent
+                            ? opponent.name
+                            : "در انتظار بازیکن",
 
-            opponentPieces:
-                opponent
-                    ? [...opponent.pieces]
-                    : [],
+                    myPieces:
+                        [...player.pieces],
 
-            turn: room.turn,
+                    opponentPieces:
+                        opponent
+                            ? [...opponent.pieces]
+                            : [],
 
-            myTurn:
-                room.turn === index,
+                    turn:
+                        room.turn,
 
-            dice: room.dice,
+                    myTurn:
+                        room.started &&
+                        room.turn === index,
 
-            gameStarted: room.started,
+                    dice:
+                        room.dice,
 
-            winner: room.winner
+                    gameStarted:
+                        room.started,
 
-        });
+                    winner:
+                        room.winner
 
-    });
+                }
+            );
+
+        }
+    );
+
 }
 
-function nextTurn(room, playerIndex) {
 
-    const player =
-        room.players[playerIndex];
+function advanceTurn(
+    room,
+    playerIndex
+) {
 
-    // با 6 نوبت دوباره همان بازیکن است
-    if (room.dice === 6) {
-        room.dice = null;
-        sendState(room);
-        return;
-    }
+    const rolled =
+        room.dice;
+
 
     room.dice = null;
 
-    room.turn =
-        getOpponentIndex(playerIndex);
+
+    /*
+    با ۶ دوباره
+    همان بازیکن بازی می‌کند
+    */
+
+    if (
+        rolled === 6
+    ) {
+
+        room.turn =
+            playerIndex;
+
+    } else {
+
+        room.turn =
+            opponentIndex(
+                playerIndex
+            );
+
+    }
+
 
     sendState(room);
+
 }
 
-function movePiece(room, playerIndex, pieceIndex) {
+
+function movePiece(
+    room,
+    playerIndex,
+    pieceIndex
+) {
 
     const player =
         room.players[playerIndex];
 
-    const opponentIndex =
-        getOpponentIndex(playerIndex);
 
     const opponent =
-        room.players[opponentIndex];
+        room.players[
+            opponentIndex(
+                playerIndex
+            )
+        ];
+
 
     const dice =
         room.dice;
 
+
     const oldPosition =
-        player.pieces[pieceIndex];
+        player.pieces[
+            pieceIndex
+        ];
 
-    let newPosition;
 
-    // خروج از خانه
-    if (oldPosition === HOME) {
-        newPosition = 0;
-    } else {
-        newPosition = oldPosition + dice;
-    }
+    /*
+    خروج مهره از خانه
+    */
 
-    player.pieces[pieceIndex] =
-        newPosition;
+    const newPosition =
+        oldPosition === HOME
+            ? 0
+            : oldPosition + dice;
+
+
+    player.pieces[
+        pieceIndex
+    ] = newPosition;
+
+
+    /*
+    بررسی زدن مهره حریف
+    */
 
     let captured = false;
 
-    /*
-     * زدن مهره حریف
-     * فقط روی مسیر اصلی
-     */
+
     if (
         newPosition >= 0 &&
-        newPosition < PATH_LENGTH
+        newPosition < MAIN_PATH
     ) {
 
         opponent.pieces =
-            opponent.pieces.map(position => {
+            opponent.pieces.map(
+                position => {
 
-                if (position === newPosition) {
+                    if (
+                        position ===
+                        newPosition
+                    ) {
 
-                    captured = true;
+                        captured = true;
 
-                    return HOME;
+                        return HOME;
+
+                    }
+
+                    return position;
+
                 }
-
-                return position;
-            });
+            );
 
     }
 
-    broadcast(room, "pieceMoved", {
-
-        playerIndex,
-
-        pieceIndex,
-
-        oldPosition,
-
-        newPosition,
-
-        captured
-
-    });
-
-    if (captured) {
-
-        broadcast(room, "capture", {
-
-            player:
-                player.name,
-
-            color:
-                player.color
-
-        });
-
-    }
 
     /*
-     * بررسی برد
-     */
-    if (isFinished(player)) {
+    اعلام حرکت
+    */
+
+    broadcast(
+        room,
+        "pieceMoved",
+        {
+
+            playerIndex,
+
+            pieceIndex,
+
+            oldPosition,
+
+            newPosition,
+
+            captured
+
+        }
+    );
+
+
+    /*
+    اعلام زدن مهره
+    */
+
+    if (
+        captured
+    ) {
+
+        broadcast(
+            room,
+            "capture",
+            {
+
+                player:
+                    player.name,
+
+                color:
+                    player.color
+
+            }
+        );
+
+    }
+
+
+    /*
+    بررسی برنده
+    */
+
+    if (
+        isWinner(player)
+    ) {
 
         room.winner =
             playerIndex;
 
-        room.started = false;
+        room.started =
+            false;
 
-        room.dice = null;
+        room.dice =
+            null;
 
-        broadcast(room, "winner", {
 
-            winner:
-                player.name,
+        broadcast(
+            room,
+            "winner",
+            {
 
-            color:
-                player.color,
+                winner:
+                    player.name,
 
-            loser:
-                opponent.name
+                color:
+                    player.color,
 
-        });
+                loser:
+                    opponent.name
+
+            }
+        );
+
 
         sendState(room);
 
         return;
+
     }
+
 
     /*
-     * حرکت مجاز انجام شد.
-     * اگر 6 یا زدن مهره باشد،
-     * نوبت دوباره به همان بازیکن می‌رسد.
-     */
+    پایان نوبت
+    */
+
+    room.dice =
+        null;
+
+
+    /*
+    با ۶ یا زدن مهره
+    دوباره نوبت همان بازیکن
+    */
 
     if (
-        dice === 6 ||
-        captured
+        dice !== 6 &&
+        !captured
     ) {
 
-        room.dice = null;
-
-    } else {
-
-        room.dice = null;
-
         room.turn =
-            opponentIndex;
+            opponentIndex(
+                playerIndex
+            );
+
     }
 
+
     sendState(room);
+
 }
 
 
@@ -315,548 +543,623 @@ function movePiece(room, playerIndex, pieceIndex) {
 ========================================
 */
 
-io.on("connection", socket => {
+io.on(
+    "connection",
+    socket => {
 
-    console.log(
-        "Player connected:",
-        socket.id
-    );
-
-
-    /*
-    ========================================
-    ساخت اتاق
-    ========================================
-    */
-
-    socket.on("createRoom", data => {
-
-        const roomCode =
-            createRoomCode();
-
-        const name =
-            String(
-                data?.name || "بازیکن ۱"
-            )
-            .trim()
-            .substring(0, 20);
-
-        const room = {
-
-            code: roomCode,
-
-            players: [],
-
-            turn: 0,
-
-            dice: null,
-
-            started: false,
-
-            winner: null
-
-        };
-
-        const player =
-            createPlayer(
-                socket,
-                name,
-                COLORS[0]
-            );
-
-        room.players.push(player);
-
-        rooms.set(
-            roomCode,
-            room
-        );
-
-        socket.join(roomCode);
-
-        socket.data.roomCode =
-            roomCode;
-
-        socket.data.playerIndex =
-            0;
-
-        send(
-            socket,
-            "roomCreated",
-            {
-                roomCode
-            }
-        );
-
-        sendState(room);
-
-        console.log(
-            "Room created:",
-            roomCode
-        );
-
-    });
-
-
-    /*
-    ========================================
-    ورود بازیکن دوم
-    ========================================
-    */
-
-    socket.on("joinRoom", data => {
-
-        const roomCode =
-            String(
-                data?.roomCode || ""
-            )
-            .trim()
-            .toUpperCase();
-
-        const room =
-            rooms.get(roomCode);
-
-        if (!room) {
-
-            send(
-                socket,
-                "errorMessage",
-                {
-                    message:
-                        "❌ اتاق پیدا نشد."
-                }
-            );
-
-            return;
-        }
-
-        if (room.players.length >= 2) {
-
-            send(
-                socket,
-                "errorMessage",
-                {
-                    message:
-                        "❌ این اتاق پر است."
-                }
-            );
-
-            return;
-        }
-
-        const name =
-            String(
-                data?.name || "بازیکن ۲"
-            )
-            .trim()
-            .substring(0, 20);
-
-        const player =
-            createPlayer(
-                socket,
-                name,
-                COLORS[1]
-            );
-
-        room.players.push(player);
-
-        socket.join(roomCode);
-
-        socket.data.roomCode =
-            roomCode;
-
-        socket.data.playerIndex =
-            1;
-
-        room.started = true;
-
-        room.turn = 0;
-
-        room.dice = null;
-
-        room.winner = null;
-
-        broadcast(
-            room,
-            "gameStarted",
-            {
-                message:
-                    "🎲 بازی شروع شد!"
-            }
-        );
-
-        sendState(room);
-
-        console.log(
-            "Player joined room:",
-            roomCode
-        );
-
-    });
-
-
-    /*
-    ========================================
-    انداختن تاس
-    ========================================
-    */
-
-    socket.on("rollDice", () => {
-
-        const room =
-            getRoom(socket);
-
-        if (!room) {
-            return;
-        }
-
-        const playerIndex =
-            getPlayerIndex(socket);
-
-        if (
-            !room.started ||
-            room.winner !== null
-        ) {
-            return;
-        }
-
-        if (
-            room.turn !== playerIndex
-        ) {
-
-            send(
-                socket,
-                "errorMessage",
-                {
-                    message:
-                        "⏳ الان نوبت تو نیست."
-                }
-            );
-
-            return;
-        }
-
-        // جلوگیری از دوبار تاس انداختن
-        if (room.dice !== null) {
-            return;
-        }
-
-        const dice =
-            Math.floor(
-                Math.random() * 6
-            ) + 1;
-
-        room.dice = dice;
-
-        broadcast(
-            room,
-            "diceRolled",
-            {
-                playerIndex,
-                dice
-            }
-        );
 
         /*
-         * اگر مهره‌ای قابل حرکت نیست،
-         * بعد از کمی تأخیر نوبت عوض شود.
-         */
+        =================================
+        ساخت اتاق
+        =================================
+        */
 
-        if (
-            !hasMovablePiece(
-                room,
-                playerIndex
-            )
-        ) {
+        socket.on(
+            "createRoom",
+            data => {
 
-            send(
-                socket,
-                "noMove",
-                {
-                    dice
+                const code =
+                    createRoomCode();
+
+
+                const name =
+                    String(
+                        data?.name ||
+                        "بازیکن ۱"
+                    )
+                    .trim()
+                    .slice(0, 20);
+
+
+                const room = {
+
+                    code,
+
+                    players: [],
+
+                    turn: 0,
+
+                    dice: null,
+
+                    started: false,
+
+                    winner: null
+
+                };
+
+
+                room.players.push(
+                    createPlayer(
+                        socket,
+                        name,
+                        COLORS[0]
+                    )
+                );
+
+
+                rooms.set(
+                    code,
+                    room
+                );
+
+
+                socket.join(code);
+
+
+                socket.data.roomCode =
+                    code;
+
+
+                socket.data.playerIndex =
+                    0;
+
+
+                emitTo(
+                    socket,
+                    "roomCreated",
+                    {
+                        roomCode:
+                            code
+                    }
+                );
+
+
+                sendState(room);
+
+            }
+        );
+
+
+        /*
+        =================================
+        ورود بازیکن دوم
+        =================================
+        */
+
+        socket.on(
+            "joinRoom",
+            data => {
+
+                const code =
+                    String(
+                        data?.roomCode ||
+                        ""
+                    )
+                    .trim()
+                    .toUpperCase();
+
+
+                const room =
+                    rooms.get(code);
+
+
+                if (!room) {
+
+                    return emitTo(
+                        socket,
+                        "errorMessage",
+                        {
+                            message:
+                                "❌ اتاق پیدا نشد."
+                        }
+                    );
+
                 }
-            );
 
-            setTimeout(() => {
 
                 if (
-                    !room.started ||
-                    room.dice !== dice
+                    room.players.length >= 2
                 ) {
+
+                    return emitTo(
+                        socket,
+                        "errorMessage",
+                        {
+                            message:
+                                "❌ این اتاق پر است."
+                        }
+                    );
+
+                }
+
+
+                const name =
+                    String(
+                        data?.name ||
+                        "بازیکن ۲"
+                    )
+                    .trim()
+                    .slice(0, 20);
+
+
+                room.players.push(
+                    createPlayer(
+                        socket,
+                        name,
+                        COLORS[1]
+                    )
+                );
+
+
+                socket.join(code);
+
+
+                socket.data.roomCode =
+                    code;
+
+
+                socket.data.playerIndex =
+                    1;
+
+
+                room.started =
+                    true;
+
+
+                room.turn =
+                    0;
+
+
+                room.dice =
+                    null;
+
+
+                room.winner =
+                    null;
+
+
+                broadcast(
+                    room,
+                    "gameStarted",
+                    {
+                        message:
+                            "🎲 بازی شروع شد!"
+                    }
+                );
+
+
+                sendState(room);
+
+            }
+        );
+
+
+        /*
+        =================================
+        انداختن تاس
+        =================================
+        */
+
+        socket.on(
+            "rollDice",
+            () => {
+
+                const room =
+                    getRoom(socket);
+
+
+                if (
+                    !room ||
+                    !room.started ||
+                    room.winner !== null
+                ) {
+
+                    return;
+
+                }
+
+
+                const playerIndex =
+                    getPlayerIndex(
+                        socket
+                    );
+
+
+                if (
+                    room.turn !==
+                    playerIndex
+                ) {
+
+                    return emitTo(
+                        socket,
+                        "errorMessage",
+                        {
+                            message:
+                                "⏳ الان نوبت تو نیست."
+                        }
+                    );
+
+                }
+
+
+                /*
+                جلوگیری از
+                دوبار تاس
+                */
+
+                if (
+                    room.dice !== null
+                ) {
+
+                    return;
+
+                }
+
+
+                room.dice =
+                    Math.floor(
+                        Math.random() * 6
+                    ) + 1;
+
+
+                const dice =
+                    room.dice;
+
+
+                broadcast(
+                    room,
+                    "diceRolled",
+                    {
+
+                        playerIndex,
+
+                        dice
+
+                    }
+                );
+
+
+                /*
+                اگر هیچ مهره‌ای
+                قابل حرکت نبود
+                */
+
+                if (
+                    !hasMovablePiece(
+                        room,
+                        playerIndex
+                    )
+                ) {
+
+                    emitTo(
+                        socket,
+                        "noMove",
+                        {
+                            dice
+                        }
+                    );
+
+
+                    setTimeout(
+                        () => {
+
+                            if (
+                                !room.started ||
+                                room.dice !== dice
+                            ) {
+
+                                return;
+
+                            }
+
+
+                            advanceTurn(
+                                room,
+                                playerIndex
+                            );
+
+                        },
+                        1200
+                    );
+
+
+                    return;
+
+                }
+
+
+                sendState(room);
+
+            }
+        );
+
+
+        /*
+        =================================
+        حرکت مهره
+        =================================
+        */
+
+        socket.on(
+            "movePiece",
+            data => {
+
+                const room =
+                    getRoom(socket);
+
+
+                if (
+                    !room ||
+                    !room.started ||
+                    room.winner !== null
+                ) {
+
+                    return;
+
+                }
+
+
+                const playerIndex =
+                    getPlayerIndex(
+                        socket
+                    );
+
+
+                if (
+                    room.turn !==
+                    playerIndex
+                ) {
+
+                    return;
+
+                }
+
+
+                if (
+                    room.dice === null
+                ) {
+
+                    return;
+
+                }
+
+
+                const pieceIndex =
+                    Number(
+                        data?.pieceIndex
+                    );
+
+
+                if (
+                    !canMove(
+                        room,
+                        playerIndex,
+                        pieceIndex
+                    )
+                ) {
+
+                    return emitTo(
+                        socket,
+                        "errorMessage",
+                        {
+                            message:
+                                "❌ این مهره قابل حرکت نیست."
+                        }
+                    );
+
+                }
+
+
+                movePiece(
+                    room,
+                    playerIndex,
+                    pieceIndex
+                );
+
+            }
+        );
+
+
+        /*
+        =================================
+        چت
+        =================================
+        */
+
+        socket.on(
+            "chatMessage",
+            data => {
+
+                const room =
+                    getRoom(socket);
+
+
+                if (!room) {
                     return;
                 }
 
-                nextTurn(
+
+                const player =
+                    room.players[
+                        getPlayerIndex(
+                            socket
+                        )
+                    ];
+
+
+                if (!player) {
+                    return;
+                }
+
+
+                const message =
+                    String(
+                        data?.message ||
+                        ""
+                    )
+                    .trim()
+                    .slice(0, 200);
+
+
+                if (!message) {
+                    return;
+                }
+
+
+                broadcast(
                     room,
-                    playerIndex
+                    "chatMessage",
+                    {
+
+                        name:
+                            player.name,
+
+                        color:
+                            player.color,
+
+                        message
+
+                    }
                 );
 
-            }, 1200);
-
-            return;
-        }
-
-        sendState(room);
-
-    });
-
-
-    /*
-    ========================================
-    حرکت مهره
-    ========================================
-    */
-
-    socket.on("movePiece", data => {
-
-        const room =
-            getRoom(socket);
-
-        if (!room) {
-            return;
-        }
-
-        const playerIndex =
-            getPlayerIndex(socket);
-
-        if (
-            !room.started ||
-            room.winner !== null
-        ) {
-            return;
-        }
-
-        if (
-            room.turn !== playerIndex
-        ) {
-            return;
-        }
-
-        if (room.dice === null) {
-            return;
-        }
-
-        const pieceIndex =
-            Number(
-                data?.pieceIndex
-            );
-
-        if (
-            !Number.isInteger(pieceIndex) ||
-            pieceIndex < 0 ||
-            pieceIndex > 3
-        ) {
-            return;
-        }
-
-        if (
-            !canMove(
-                room,
-                playerIndex,
-                pieceIndex
-            )
-        ) {
-
-            send(
-                socket,
-                "errorMessage",
-                {
-                    message:
-                        "❌ این مهره قابل حرکت نیست."
-                }
-            );
-
-            return;
-        }
-
-        movePiece(
-            room,
-            playerIndex,
-            pieceIndex
-        );
-
-    });
-
-
-    /*
-    ========================================
-    چت
-    ========================================
-    */
-
-    socket.on("chatMessage", data => {
-
-        const room =
-            getRoom(socket);
-
-        if (!room) {
-            return;
-        }
-
-        const playerIndex =
-            getPlayerIndex(socket);
-
-        const player =
-            room.players[playerIndex];
-
-        if (!player) {
-            return;
-        }
-
-        const message =
-            String(
-                data?.message || ""
-            )
-            .trim()
-            .substring(0, 200);
-
-        if (!message) {
-            return;
-        }
-
-        broadcast(
-            room,
-            "chatMessage",
-            {
-                name:
-                    player.name,
-
-                color:
-                    player.color,
-
-                message
             }
         );
 
-    });
 
+        /*
+        =================================
+        ایموجی سریع
+        =================================
+        */
 
-    /*
-    ========================================
-    ایموجی سریع
-    ========================================
-    */
-
-    socket.on("emoji", data => {
-
-        const room =
-            getRoom(socket);
-
-        if (!room) {
-            return;
-        }
-
-        const playerIndex =
-            getPlayerIndex(socket);
-
-        const player =
-            room.players[playerIndex];
-
-        if (!player) {
-            return;
-        }
-
-        const allowed =
-            [
-                "😂",
-                "😎",
-                "🔥",
-                "😱",
-                "👏",
-                "😍",
-                "🎉",
-                "😭",
-                "🤣",
-                "😡",
-                "👍",
-                "❤️",
-                "🎲"
-            ];
-
-        const emoji =
-            String(
-                data?.emoji || ""
-            );
-
-        if (
-            !allowed.includes(emoji)
-        ) {
-            return;
-        }
-
-        broadcast(
-            room,
+        socket.on(
             "emoji",
-            {
-                name:
-                    player.name,
+            data => {
 
-                color:
-                    player.color,
+                const room =
+                    getRoom(socket);
 
-                emoji
+
+                if (!room) {
+                    return;
+                }
+
+
+                const player =
+                    room.players[
+                        getPlayerIndex(
+                            socket
+                        )
+                    ];
+
+
+                const emoji =
+                    String(
+                        data?.emoji ||
+                        ""
+                    );
+
+
+                if (
+                    !player ||
+                    !ALLOWED_EMOJIS.includes(
+                        emoji
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                broadcast(
+                    room,
+                    "emoji",
+                    {
+
+                        name:
+                            player.name,
+
+                        color:
+                            player.color,
+
+                        emoji
+
+                    }
+                );
+
             }
         );
 
-    });
+
+        /*
+        =================================
+        قطع اتصال
+        =================================
+        */
+
+        socket.on(
+            "disconnect",
+            () => {
+
+                const room =
+                    getRoom(socket);
 
 
-    /*
-    ========================================
-    قطع اتصال
-    ========================================
-    */
+                if (!room) {
+                    return;
+                }
 
-    socket.on("disconnect", () => {
 
-        console.log(
-            "Player disconnected:",
-            socket.id
+                const other =
+                    room.players.find(
+                        player =>
+                            player.socketId !==
+                            socket.id
+                    );
+
+
+                if (other) {
+
+                    emitTo(
+                        other.socket,
+                        "opponentLeft"
+                    );
+
+                }
+
+
+                rooms.delete(
+                    room.code
+                );
+
+            }
         );
 
-        const room =
-            getRoom(socket);
-
-        if (!room) {
-            return;
-        }
-
-        const playerIndex =
-            getPlayerIndex(socket);
-
-        const opponentIndex =
-            getOpponentIndex(
-                playerIndex
-            );
-
-        const opponent =
-            room.players[opponentIndex];
-
-        if (opponent) {
-
-            send(
-                opponent.socket,
-                "opponentLeft"
-            );
-
-        }
-
-        rooms.delete(room.code);
-
-    });
-
-});
+    }
+);
 
 
 const PORT =
     process.env.PORT || 3000;
+
 
 server.listen(
     PORT,
     () => {
 
         console.log(
-            "🎲 Online Ludo server started on port " +
-            PORT
+            `🎲 Online Ludo server started on port ${PORT}`
         );
 
     }
