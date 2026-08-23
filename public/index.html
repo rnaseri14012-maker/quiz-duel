@@ -1,825 +1,1339 @@
 <!DOCTYPE html>
+
 <html lang="fa" dir="rtl">
-
 <head>
-
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Battle Arena</title>
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-
-<title>نبرد اطلاعات عمومی</title>
-
+    
 <style>
-
-body {
+* {
+    box-sizing: border-box;
     margin: 0;
-    font-family: Tahoma, Arial, sans-serif;
-    background: linear-gradient(135deg, #141e30, #243b55);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    padding: 0;
 }
 
-.game {
-    width: 94%;
-    max-width: 550px;
-    background: white;
-    padding: 25px;
-    border-radius: 25px;
-    box-shadow: 0 15px 40px #0006;
+body {
+    font-family: Arial, sans-serif;
+    background:
+        radial-gradient(circle at top, #26345f, #0b1024 60%);
+    color: white;
+    min-height: 100vh;
+}
+
+.container {
+    width: 95%;
+    max-width: 950px;
+    margin: auto;
+    padding: 20px 0 40px;
 }
 
 h1 {
     text-align: center;
-    color: #243b55;
+    font-size: 38px;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #aeb8df;
+    margin-bottom: 20px;
+}
+
+.panel {
+    background: rgba(20, 27, 57, .92);
+    border: 1px solid #394777;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 15px 40px rgba(0,0,0,.3);
 }
 
 input {
     width: 100%;
-    padding: 15px;
-    margin: 8px 0;
-    border: 1px solid #ccc;
+    padding: 14px;
     border-radius: 12px;
+    border: none;
+    outline: none;
+    margin-bottom: 10px;
     font-size: 16px;
-    box-sizing: border-box;
 }
 
 button {
-    width: 100%;
-    padding: 15px;
-    margin: 7px 0;
     border: none;
     border-radius: 12px;
-    font-size: 16px;
+    padding: 13px 17px;
+    font-size: 15px;
+    font-weight: bold;
     cursor: pointer;
+    transition: .2s;
 }
 
-.main {
-    background: #243b55;
+button:hover {
+    transform: translateY(-2px);
+}
+
+.primary {
+    background: #5865f2;
     color: white;
 }
 
-.answer {
-    background: #eeeeee;
-}
-
-.correct {
-    background: green !important;
+.green {
+    background: #20c997;
     color: white;
 }
 
-.wrong {
-    background: red !important;
+.red {
+    background: #ef476f;
     color: white;
+}
+
+.orange {
+    background: #ff9f1c;
+    color: white;
+}
+
+.blue {
+    background: #2196f3;
+    color: white;
+}
+
+.gray {
+    background: #46506f;
+    color: white;
+}
+
+.room-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.room-code {
+    background: #080d1e;
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    margin-top: 12px;
+    font-size: 20px;
+    letter-spacing: 3px;
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
-.room {
-    text-align: center;
-    background: #eef2ff;
-    padding: 20px;
-    border-radius: 15px;
-    margin: 15px 0;
-}
-
-.code {
-    font-size: 32px;
-    font-weight: bold;
-    letter-spacing: 5px;
-    color: #3730a3;
-    margin: 10px;
-}
+/* PLAYERS */
 
 .players {
-    display: flex;
-    gap: 10px;
-    margin: 15px 0;
+    display: grid;
+    grid-template-columns: 1fr 80px 1fr;
+    align-items: center;
+    gap: 12px;
 }
 
 .player {
-    flex: 1;
-    background: #f3f4f6;
-    padding: 12px;
-    border-radius: 12px;
-    text-align: center;
+    background: #111936;
+    padding: 15px;
+    border-radius: 17px;
 }
 
-.question {
-    background: #f1f3f6;
-    padding: 20px;
-    border-radius: 15px;
-    font-size: 20px;
+.player-name {
+    font-size: 18px;
     font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.hp-container {
+    width: 100%;
+    height: 20px;
+    background: #303852;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.hp {
+    height: 100%;
+    width: 100%;
+    background: #20c997;
+    transition: .4s;
+}
+
+.hp-text {
+    margin-top: 6px;
+    font-size: 14px;
+}
+
+.vs {
     text-align: center;
-    margin: 20px 0;
+    font-size: 25px;
+    font-weight: bold;
+    color: #ffcc00;
+}
+
+/* TIMER */
+
+.timer-box {
+    text-align: center;
+    margin: 15px 0;
+}
+
+.timer {
+    display: inline-flex;
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    border: 6px solid #5865f2;
+    align-items: center;
+    justify-content: center;
+    font-size: 27px;
+    font-weight: bold;
+}
+
+/* QUESTION */
+
+.question {
+    font-size: 23px;
+    text-align: center;
+    line-height: 1.7;
+    margin: 15px 0 20px;
+}
+
+.answers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.answer {
+    background: #222b50;
+    color: white;
+    border: 2px solid #35406b;
+    min-height: 60px;
+}
+
+.answer:hover {
+    background: #303b69;
+}
+
+.answer.correct {
+    background: #168f68;
+}
+
+.answer.wrong {
+    background: #c93659;
+}
+
+/* POWERS */
+
+.power-title {
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.powers {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+.power {
+    background: #242d50;
+    color: white;
+    min-height: 70px;
+    font-size: 13px;
+}
+
+.power span {
+    display: block;
+    font-size: 22px;
+    margin-bottom: 5px;
+}
+
+.power:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* LOG */
+
+.log {
+    background: #080d1e;
+    border-radius: 12px;
+    padding: 12px;
+    height: 130px;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.8;
 }
 
 .status {
     text-align: center;
-    font-weight: bold;
-    margin: 15px 0;
+    padding: 10px;
+    border-radius: 10px;
+    background: #1b2548;
+    margin-bottom: 12px;
 }
 
-.small {
+/* GAME OVER */
+
+.game-over {
     text-align: center;
-    color: #777;
+    padding: 30px;
 }
 
-</style>
+.game-over h2 {
+    font-size: 35px;
+    margin-bottom: 15px;
+}
 
+@media(max-width:650px) {
+
+    h1 {
+        font-size: 30px;
+    }
+
+    .players {
+        grid-template-columns: 1fr 45px 1fr;
+    }
+
+    .answers {
+        grid-template-columns: 1fr;
+    }
+
+    .powers {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .power {
+        min-height: 65px;
+    }
+
+    .room-buttons {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 </head>
 
 <body>
 
-<div class="game">
+<div class="container">
 
-<div id="home">
+    <h1>⚔️ Battle Arena</h1>
+    <div class="subtitle">نبرد دو نفره با دانش و سرعت</div>
 
-<h1>🧠 نبرد اطلاعات عمومی</h1>
+    <!-- LOBBY -->
 
-<input
-id="name"
-maxlength="20"
-placeholder="نام خودت را وارد کن">
+    <div id="lobby" class="panel">
 
-<button
-class="main"
-onclick="createRoom()">
+        <h2>🏠 ورود به بازی</h2>
 
-🎮 ساخت بازی
+        <br>
 
-</button>
+        <input
+            id="playerName"
+            type="text"
+            placeholder="نام بازیکن"
+            maxlength="15"
+        >
 
-<input
-id="room"
-placeholder="کد اتاق دوستت">
+        <div class="room-buttons">
 
-<button
-class="main"
-onclick="joinRoom()">
+            <button class="primary" onclick="createRoom()">
+                ➕ ساخت اتاق
+            </button>
 
-🔗 ورود به بازی
+            <button class="green" onclick="joinRoom()">
+                🚪 ورود به اتاق
+            </button>
 
-</button>
+        </div>
 
-<p class="small">
+        <br>
 
-برای بازی دو نفره، یک نفر اتاق بسازد
-و کد اتاق را برای نفر دوم بفرستد.
+        <input
+            id="roomInput"
+            type="text"
+            placeholder="کد اتاق"
+            maxlength="10"
+        >
 
-</p>
+        <div id="roomInfo" class="hidden">
+
+            <div class="room-code">
+                کد اتاق:
+                <strong id="roomCode"></strong>
+            </div>
+
+            <br>
+
+            <button
+                class="blue"
+                style="width:100%"
+                onclick="inviteTelegram()"
+            >
+                📱 دعوت دوست در تلگرام
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- GAME -->
+
+    <div id="game" class="hidden">
+
+        <div id="status" class="status">
+            منتظر بازیکن دوم...
+        </div>
+
+        <div class="panel">
+
+            <div class="players">
+
+                <div class="player">
+
+                    <div class="player-name">
+                        👤 <span id="myName">بازیکن</span>
+                    </div>
+
+                    <div class="hp-container">
+                        <div id="myHp" class="hp"></div>
+                    </div>
+
+                    <div class="hp-text">
+                        ❤️ HP:
+                        <span id="myHpText">100</span>
+                    </div>
+
+                    <div>
+                        🔥 Combo:
+                        <span id="myCombo">0</span>
+                    </div>
+
+                </div>
+
+                <div class="vs">
+                    VS
+                </div>
+
+                <div class="player">
+
+                    <div class="player-name">
+                        👤 <span id="enemyName">حریف</span>
+                    </div>
+
+                    <div class="hp-container">
+                        <div id="enemyHp" class="hp"></div>
+                    </div>
+
+                    <div class="hp-text">
+                        ❤️ HP:
+                        <span id="enemyHpText">100</span>
+                    </div>
+
+                    <div>
+                        🔥 Combo:
+                        <span id="enemyCombo">0</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="timer-box">
+                <div id="timer" class="timer">
+                    15
+                </div>
+            </div>
+
+            <div id="question" class="question">
+                منتظر سؤال...
+            </div>
+
+            <div id="answers" class="answers"></div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="power-title">
+                ⚡ قدرت‌های ویژه
+            </div>
+
+            <div class="powers">
+
+                <button
+                    id="shieldBtn"
+                    class="power"
+                    onclick="usePower('shield')"
+                >
+                    <span>🛡️</span>
+                    Shield
+                </button>
+
+                <button
+                    id="doubleBtn"
+                    class="power"
+                    onclick="usePower('double')"
+                >
+                    <span>⚔️</span>
+                    Double
+                </button>
+
+                <button
+                    id="fiftyBtn"
+                    class="power"
+                    onclick="usePower('fifty')"
+                >
+                    <span>🎯</span>
+                    50/50
+                </button>
+
+                <button
+                    id="healBtn"
+                    class="power"
+                    onclick="usePower('heal')"
+                >
+                    <span>💚</span>
+                    Heal
+                </button>
+
+                <button
+                    id="fastBtn"
+                    class="power"
+                    onclick="usePower('fast')"
+                >
+                    <span>⚡</span>
+                    حمله سریع
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <h3>📜 گزارش نبرد</h3>
+
+            <br>
+
+            <div id="battleLog" class="log">
+                بازی آماده است...
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- GAME OVER -->
+
+    <div id="gameOver" class="panel hidden">
+
+        <div class="game-over">
+
+            <h2 id="winnerText">
+                🏆 برنده!
+            </h2>
+
+            <p id="resultText"></p>
+
+            <br>
+
+            <button
+                class="primary"
+                onclick="location.reload()"
+            >
+                🔄 بازی دوباره
+            </button>
+
+        </div>
+
+    </div>
 
 </div>
-    <!-- اتاق انتظار -->
-
-<div id="lobby" class="hidden">
-
-<h1>⏳ اتاق بازی</h1>
-
-<div class="room">
-
-<div>کد اتاق:</div>
-
-<div class="code" id="roomCode"></div>
-
-<button
-class="main"
-onclick="shareRoom()">
-
-📤 دعوت از دوست
-
-</button>
-
-</div>
-
-<div
-class="players"
-id="players">
-</div>
-
-<div
-class="status"
-id="waiting">
-
-منتظر بازیکن دوم...
-
-</div>
-
-</div>
 
 
-<!-- صفحه بازی -->
+<script src="/socket.io/socket.io.js"></script>
 
-<div
-id="gameScreen"
-class="hidden">
+<script>
 
-<h1>⚔️ نبرد اطلاعات عمومی</h1>
+let socket;
 
-<div class="players">
-
-<div
-class="player"
-id="player1">
-
-بازیکن ۱
-<br>
-⭐ 0
-
-</div>
-    
-
-<div
-class="player"
-id="player2">
-
-بازیکن ۲
-<br>
-⭐ 0
-
-</div>
-
-</div>
-
-<div
-class="small"
-id="number">
-</div>
-<div
-id="timer"
-style="
-text-align:center;
-font-size:28px;
-font-weight:bold;
-margin:10px;
-">
-⏱️ 15
-    
-</div>
-<div
-class="question"
-id="question">
-</div>
-
-<div id="answers">
-</div>
-
-<div
-class="status"
-id="status">
-</div>
-
-</div>
-
-
-<!-- صفحه نتیجه -->
-
-<div
-id="result"
-class="hidden">
-
-<h1>🏆 پایان بازی</h1>
-
-<h2
-id="winner"
-style="text-align:center">
-</h2>
-
-<div
-id="finalScore"
-style="text-align:center">
-</div>
-
-<button
-class="main"
-onclick="location.reload()">
-
-🔄 بازی دوباره
-
-</button>
-
-</div>
-
-</div>
-    <script>
-
-let socket = null;
 let roomCode = "";
-let answered = false;
+let playerName = "";
 
-function getName() {
+let myHP = 100;
+let enemyHP = 100;
 
-    const name =
-        document.getElementById("name").value.trim();
+let myCombo = 0;
+let enemyCombo = 0;
 
-    return name || "بازیکن";
+let timeLeft = 15;
+let timerInterval = null;
+
+let currentQuestion = null;
+
+let powers = {
+    shield: true,
+    double: true,
+    fifty: true,
+    heal: true,
+    fast: true
+};
+
+
+/* =========================
+   CONNECTION
+========================= */
+
+try {
+
+    socket = io();
+
+    socket.on("connect", () => {
+
+        addLog("🟢 اتصال به سرور برقرار شد.");
+
+    });
+
+    socket.on("disconnect", () => {
+
+        addLog("🔴 اتصال به سرور قطع شد.");
+
+        setStatus("اتصال به سرور قطع شد.");
+
+    });
+
+} catch(e) {
+
+    console.log(e);
 
 }
 
-function connect() {
 
-    const protocol =
-        location.protocol === "https:"
-        ? "wss:"
-        : "ws:";
-
-    socket =
-        new WebSocket(
-            protocol + "//" + location.host
-        );
-
-
-    socket.onmessage = function(event) {
-
-        const data =
-            JSON.parse(event.data);
-
-        handleMessage(data);
-
-    };
-
-
-    socket.onerror = function() {
-
-        alert("خطا در اتصال به سرور.");
-
-    };
-
-}
-
+/* =========================
+   CREATE ROOM
+========================= */
 
 function createRoom() {
 
-    connect();
+    playerName =
+        document.getElementById("playerName").value.trim();
 
-    socket.onopen = function() {
+    if (!playerName) {
 
-        socket.send(JSON.stringify({
-
-            type: "create",
-
-            name: getName()
-
-        }));
-
-    };
-    
-
-}
-
-
-function joinRoom() {
-
-    const code =
-        document.getElementById("room")
-        .value
-        .trim()
-        .toUpperCase();
-
-
-    if (!code) {
-
-        alert("کد اتاق را وارد کن.");
-
+        alert("ابتدا نام خودت را وارد کن.");
         return;
 
     }
-    
 
+    if (!socket) {
 
-    roomCode = code;
-
-    connect();
-
-
-    socket.onopen = function() {
-
-        socket.send(JSON.stringify({
-
-            type: "join",
-
-            room: code,
-
-            name: getName()
-
-        }));
-
-    };
-
-        }
-
-function handleMessage(data) {
-
-
-    if (data.type === "roomCreated") {
-
-        roomCode = data.room;
-
-        document.getElementById("roomCode")
-            .innerText = roomCode;
-
-        showPage("lobby");
+        alert("اتصال به سرور برقرار نیست.");
+        return;
 
     }
 
+    socket.emit("createRoom", {
 
-    if (data.type === "players") {
+        name: playerName
 
-        document.getElementById("waiting")
-            .innerText =
-            "بازیکن دوم وارد شد! بازی شروع می‌شود...";
-
-    
-
-
-    if (data.type === "question") {
-
-if (data.type === "timer") {
-
-    const timer =
-        document.getElementById("timer");
-
-    if (timer) {
-
-        timer.innerText =
-            "⏱️ " + data.time;
-
-    }
-if (data.type === "question") {
-
-    showQuestion(data);
+    });
 
 }
 
-if (data.type === "timer") {
 
-    const timer =
-        document.getElementById("timer");
+/* =========================
+   JOIN ROOM
+========================= */
 
-    if (timer) {
+function joinRoom() {
 
-        timer.innerText =
-            "⏱️ " + data.time;
+    playerName =
+        document.getElementById("playerName").value.trim();
+
+    roomCode =
+        document.getElementById("roomInput").value.trim();
+
+    if (!playerName) {
+
+        alert("ابتدا نام خودت را وارد کن.");
+        return;
 
     }
+
+    if (!roomCode) {
+
+        alert("کد اتاق را وارد کن.");
+        return;
+
+    }
+
+    socket.emit("joinRoom", {
+
+        roomCode: roomCode,
+        name: playerName
+
+    });
 
 }
 
-if (data.type === "timeUp") {
 
-    const timer =
-        document.getElementById("timer");
+/* =========================
+   ROOM CREATED
+========================= */
 
-    if (timer) {
+if (socket) {
 
-        timer.innerText =
-            "⏰ زمان تمام شد!";
+socket.on("roomCreated", data => {
 
-    }
+    roomCode = data.roomCode || data.code;
+
+    document
+        .getElementById("roomCode")
+        .textContent = roomCode;
+
+    document
+        .getElementById("roomInfo")
+        .classList.remove("hidden");
+
+    setStatus(
+        "اتاق ساخته شد؛ منتظر ورود دوستت هستیم..."
+    );
+
+    addLog(
+        "🏠 اتاق " + roomCode + " ساخته شد."
+    );
+
+});
 
 }
 
-    if (data.type === "timeUp") {
 
-    const timer =
-        document.getElementById("timer");
+/* =========================
+   PLAYER JOINED
+========================= */
 
-    if (timer) {
+if (socket) {
 
-        timer.innerText =
-            "⏰ زمان تمام شد!";
+socket.on("playerJoined", data => {
 
-    }
+    setStatus("🟢 بازیکن دوم وارد شد!");
 
-    }
-    if (data.type === "timer") {
+    if (data.enemyName) {
 
-    const timer =
-        document.getElementById("timer");
-
-    if (timer) {
-
-        timer.innerText =
-            "⏱️ " + data.time;
-
-        function handleMessage(data) {
-
-    if (data.type === "roomCreated") {
-
-        roomCode = data.room;
-
-        document.getElementById("roomCode").innerText = roomCode;
-
-        showPage("lobby");
-    }
-
-    if (data.type === "players") {
-
-        document.getElementById("waiting").innerText =
-            "بازیکن دوم وارد شد! بازی شروع می‌شود...";
+        document
+            .getElementById("enemyName")
+            .textContent = data.enemyName;
 
     }
 
-    if (data.type === "question") {
+    addLog("⚔️ حریف وارد نبرد شد.");
 
-        showQuestion(data);
+});
 
-        const timer = document.getElementById("timer");
+}
 
-        if (timer) {
-            timer.innerText = "⏱️ " + (data.time || 15);
-        }
-    }
 
-    if (data.type === "timer") {
+/* =========================
+   START GAME
+========================= */
 
-        const timer = document.getElementById("timer");
+if (socket) {
 
-        if (timer) {
-            timer.innerText = "⏱️ " + data.time;
-        }
-    }
+socket.on("gameStart", data => {
 
-    if (data.type === "timeUp") {
+    document
+        .getElementById("lobby")
+        .classList.add("hidden");
 
-        const timer = document.getElementById("timer");
+    document
+        .getElementById("game")
+        .classList.remove("hidden");
 
-        if (timer) {
-            timer.innerText = "⏰ زمان تمام شد!";
-        }
-    }
+    document
+        .getElementById("myName")
+        .textContent = playerName;
 
-    if (data.type === "result") {
+    if (data.enemyName) {
 
-        showResult(data);
-
-    }
-
-    if (data.type === "gameOver") {
-
-        showGameOver(data);
+        document
+            .getElementById("enemyName")
+            .textContent = data.enemyName;
 
     }
 
-    if (data.type === "error") {
+    setStatus("🔥 نبرد شروع شد!");
 
-        alert(data.message);
+    if (data.question) {
 
-    }
-
-    if (data.type === "opponentLeft") {
-
-        alert("بازیکن مقابل از بازی خارج شد.");
+        showQuestion(data.question);
 
     }
 
-        }
-        
-function handleMessage(data) {
+});
 
-function showQuestion(data) {
-
-    showPage("gameScreen");
-
-    answered = false;
+}
 
 
-    document.getElementById("number")
-        .innerText =
-        "سؤال " +
-        data.number +
-        " از " +
-        data.total;
+/* =========================
+   NEW QUESTION
+========================= */
+
+if (socket) {
+
+socket.on("newQuestion", question => {
+
+    showQuestion(question);
+
+});
+
+}
 
 
-    document.getElementById("question")
-        .innerText =
-        data.question;
+/* =========================
+   SHOW QUESTION
+========================= */
 
+function showQuestion(question) {
+
+    currentQuestion = question;
+
+    document
+        .getElementById("question")
+        .textContent =
+        question.question || question.text || "سؤال";
+
+    const answers =
+        question.answers ||
+        question.options ||
+        [];
 
     const box =
         document.getElementById("answers");
 
-
     box.innerHTML = "";
 
+    answers.forEach((answer, index) => {
 
-    data.answers.forEach(function(answer, index) {
-
-        const button =
+        const btn =
             document.createElement("button");
 
+        btn.className = "answer";
 
-        button.className = "answer";
+        btn.textContent =
+            answer.text || answer;
 
-        button.innerText = answer;
+        btn.onclick = () => {
 
-
-        button.onclick = function() {
-
-            sendAnswer(index, button);
+            answerQuestion(index);
 
         };
 
-
-        box.appendChild(button);
+        box.appendChild(btn);
 
     });
 
-
-    document.getElementById("status")
-        .innerText =
-        "جوابت را انتخاب کن.";
+    startTimer();
 
 }
 
 
-function sendAnswer(index, button) {
+/* =========================
+   ANSWER
+========================= */
 
-    if (answered) return;
+function answerQuestion(index) {
 
-    answered = true;
-
+    stopTimer();
 
     const buttons =
         document.querySelectorAll(".answer");
 
-
-    buttons.forEach(function(btn) {
+    buttons.forEach(btn => {
 
         btn.disabled = true;
 
     });
 
+    if (socket) {
 
-    button.classList.add("wrong");
+        socket.emit("answer", {
 
-
-    socket.send(JSON.stringify({
-
-        type: "answer",
-
-        answer: index
-
-    }));
-
-
-    document.getElementById("status")
-        .innerText =
-        "⏳ منتظر جواب حریف...";
-
-}
-
-
-function showResult(data) {
-
-    const buttons =
-        document.querySelectorAll(".answer");
-
-
-    buttons.forEach(function(button, index) {
-
-        if (index === data.correct) {
-
-            button.classList.remove("wrong");
-
-            button.classList.add("correct");
-
-        }
-
-    });
-
-
-    updateScores(data.scores);
-
-
-    document.getElementById("status")
-        .innerText =
-        "✅ نتیجه مشخص شد.";
-
-}
-
-
-function updateScores(scores) {
-
-    document.getElementById("player1")
-        .innerHTML =
-        "👤 بازیکن ۱<br>⭐ " +
-        scores[0];
-
-
-    document.getElementById("player2")
-        .innerHTML =
-        "👤 بازیکن ۲<br>⭐ " +
-        scores[1];
-
-}
-
-
-function showGameOver(data) {
-
-    showPage("result");
-
-
-    let winner;
-
-
-    if (data.scores[0] > data.scores[1]) {
-
-        winner = "🏆 بازیکن ۱ برنده شد!";
-
-    }
-
-    else if (data.scores[1] > data.scores[0]) {
-
-        winner = "🏆 بازیکن ۲ برنده شد!";
-
-    }
-
-    else {
-
-        winner = "🤝 بازی مساوی شد!";
-
-    }
-
-
-    document.getElementById("winner")
-        .innerText = winner;
-
-
-    document.getElementById("finalScore")
-        .innerHTML =
-        "بازیکن ۱: " +
-        data.scores[0] +
-        " امتیاز<br><br>" +
-        "بازیکن ۲: " +
-        data.scores[1] +
-        " امتیاز";
-
-}
-
-
-function showPage(page) {
-
-    document.getElementById("home")
-        .classList.add("hidden");
-
-    document.getElementById("lobby")
-        .classList.add("hidden");
-
-    document.getElementById("gameScreen")
-        .classList.add("hidden");
-
-    document.getElementById("result")
-        .classList.add("hidden");
-
-
-    document.getElementById(page)
-        .classList.remove("hidden");
-
-}
-
-
-async function shareRoom() {
-
-    const url =
-        location.origin +
-        "?room=" +
-        roomCode;
-
-
-    if (navigator.share) {
-
-        await navigator.share({
-
-            title: "نبرد اطلاعات عمومی",
-
-            text: "بیا با من بازی کن 🎮",
-
-            url: url
+            roomCode: roomCode,
+            answer: index,
+            questionId:
+                currentQuestion.id || null
 
         });
 
     }
 
-    else {
+}
 
-        await navigator.clipboard
-            .writeText(url);
 
-        alert("لینک بازی کپی شد.");
+/* =========================
+   ANSWER RESULT
+========================= */
+
+if (socket) {
+
+socket.on("answerResult", data => {
+
+    if (data.correct) {
+
+        myCombo++;
+
+        document
+            .getElementById("myCombo")
+            .textContent = myCombo;
+
+        addLog(
+            "✅ پاسخ درست! Combo: " + myCombo
+        );
+
+    } else {
+
+        myCombo = 0;
+
+        document
+            .getElementById("myCombo")
+            .textContent = 0;
+
+        addLog("❌ پاسخ اشتباه!");
 
     }
+
+    if (data.damage) {
+
+        addLog(
+            "⚔️ " + data.damage + " آسیب وارد شد!"
+        );
+
+    }
+
+});
+
+}
+
+
+/* =========================
+   HP UPDATE
+========================= */
+
+if (socket) {
+
+socket.on("hpUpdate", data => {
+
+    if (data.myHP !== undefined) {
+
+        myHP = data.myHP;
+
+        updateHP(
+            "myHp",
+            "myHpText",
+            myHP
+        );
+
+    }
+
+    if (data.enemyHP !== undefined) {
+
+        enemyHP = data.enemyHP;
+
+        updateHP(
+            "enemyHp",
+            "enemyHpText",
+            enemyHP
+        );
+
+    }
+
+});
+
+}
+
+
+/* =========================
+   POWER
+========================= */
+
+function usePower(power) {
+
+    if (!powers[power]) {
+
+        alert("این قدرت قبلاً استفاده شده!");
+        return;
+
+    }
+
+    powers[power] = false;
+
+    const buttonMap = {
+
+        shield: "shieldBtn",
+        double: "doubleBtn",
+        fifty: "fiftyBtn",
+        heal: "healBtn",
+        fast: "fastBtn"
+
+    };
+
+    document
+        .getElementById(buttonMap[power])
+        .disabled = true;
+
+
+    if (power === "fifty") {
+
+        removeTwoWrongAnswers();
+
+    }
+
+
+    if (socket) {
+
+        socket.emit("usePower", {
+
+            roomCode: roomCode,
+            power: power
+
+        });
+
+    }
+
+    addLog(
+        "⚡ قدرت " + power + " فعال شد!"
+    );
+
+}
+
+
+/* =========================
+   50/50
+========================= */
+
+function removeTwoWrongAnswers() {
+
+    const buttons =
+        Array.from(
+            document.querySelectorAll(".answer")
+        );
+
+    if (buttons.length <= 2) return;
+
+    let indexes = [];
+
+    while (indexes.length < 2) {
+
+        let random =
+            Math.floor(
+                Math.random() * buttons.length
+            );
+
+        if (!indexes.includes(random)) {
+
+            indexes.push(random);
+
+        }
+
+    }
+
+    indexes.forEach(index => {
+
+        buttons[index].disabled = true;
+        buttons[index].style.opacity = ".25";
+
+    });
+
+}
+
+
+/* =========================
+   TIMER
+========================= */
+
+function startTimer() {
+
+    stopTimer();
+
+    timeLeft = 15;
+
+    document
+        .getElementById("timer")
+        .textContent = timeLeft;
+
+    timerInterval =
+        setInterval(() => {
+
+            timeLeft--;
+
+            document
+                .getElementById("timer")
+                .textContent = timeLeft;
+
+            if (timeLeft <= 0) {
+
+                stopTimer();
+
+                timeUp();
+
+            }
+
+        }, 1000);
+
+}
+
+
+function stopTimer() {
+
+    if (timerInterval) {
+
+        clearInterval(timerInterval);
+
+        timerInterval = null;
+
+    }
+
+}
+
+
+function timeUp() {
+
+    document
+        .querySelectorAll(".answer")
+        .forEach(btn => {
+
+            btn.disabled = true;
+
+        });
+
+    addLog("⏰ زمان تمام شد!");
+
+    if (socket) {
+
+        socket.emit("timeUp", {
+
+            roomCode: roomCode
+
+        });
+
+    }
+
+}
+
+
+/* =========================
+   POWER RESULT
+========================= */
+
+if (socket) {
+
+socket.on("powerResult", data => {
+
+    if (data.myHP !== undefined) {
+
+        myHP = data.myHP;
+
+        updateHP(
+            "myHp",
+            "myHpText",
+            myHP
+        );
+
+    }
+
+    if (data.enemyHP !== undefined) {
+
+        enemyHP = data.enemyHP;
+
+        updateHP(
+            "enemyHp",
+            "enemyHpText",
+            enemyHP
+        );
+
+    }
+
+    if (data.message) {
+
+        addLog(data.message);
+
+    }
+
+});
+
+}
+
+
+/* =========================
+   GAME OVER
+========================= */
+
+if (socket) {
+
+socket.on("gameOver", data => {
+
+    stopTimer();
+
+    document
+        .getElementById("game")
+        .classList.add("hidden");
+
+    document
+        .getElementById("gameOver")
+        .classList.remove("hidden");
+
+    if (data.winner === true) {
+
+        document
+            .getElementById("winnerText")
+            .textContent =
+            "🏆 تو برنده شدی!";
+
+        document
+            .getElementById("resultText")
+            .textContent =
+            "تبریک! حریفت را شکست دادی.";
+
+    } else {
+
+        document
+            .getElementById("winnerText")
+            .textContent =
+            "😔 باختی!";
+
+        document
+            .getElementById("resultText")
+            .textContent =
+            "این بار نشد؛ دوباره امتحان کن.";
+
+    }
+
+});
+
+}
+
+
+/* =========================
+   UPDATE HP
+========================= */
+
+function updateHP(bar, text, value) {
+
+    value =
+        Math.max(0, Math.min(100, value));
+
+    document
+        .getElementById(bar)
+        .style.width = value + "%";
+
+    document
+        .getElementById(text)
+        .textContent = value;
+
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+function setStatus(text) {
+
+    document
+        .getElementById("status")
+        .textContent = text;
+
+}
+
+
+/* =========================
+   LOG
+========================= */
+
+function addLog(text) {
+
+    const log =
+        document.getElementById("battleLog");
+
+    const line =
+        document.createElement("div");
+
+    line.textContent = text;
+
+    log.appendChild(line);
+
+    log.scrollTop =
+        log.scrollHeight;
+
+}
+
+
+/* =========================
+   TELEGRAM INVITE
+========================= */
+
+function inviteTelegram() {
+
+    const url =
+        window.location.origin +
+        "?room=" +
+        encodeURIComponent(roomCode);
+
+    const text =
+        "⚔️ بیا با هم Battle Arena بازی کنیم!\n" +
+        "کد اتاق: " +
+        roomCode;
+
+    const telegram =
+        "https://t.me/share/url?url=" +
+        encodeURIComponent(url) +
+        "&text=" +
+        encodeURIComponent(text);
+
+    window.open(
+        telegram,
+        "_blank"
+    );
+
+}
+
+
+/* =========================
+   AUTO ROOM FROM URL
+========================= */
+
+const params =
+    new URLSearchParams(
+        window.location.search
+    );
+
+const invitedRoom =
+    params.get("room");
+
+if (invitedRoom) {
+
+    document
+        .getElementById("roomInput")
+        .value = invitedRoom;
 
 }
 
 </script>
 
 </body>
-</html>
-
+    </html>
