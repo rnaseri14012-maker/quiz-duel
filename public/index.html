@@ -3,1327 +3,2091 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Battle Arena</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🎲 Ludo Battle Online</title>
 
-    
 <style>
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+*{box-sizing:border-box}
+
+:root{
+  --bg:#07101f;
+  --panel:#101b31;
+  --panel2:#162442;
+  --text:#f7f9ff;
+  --muted:#9eacc9;
+  --red:#ff3f68;
+  --blue:#2698ff;
+  --gold:#ffd43b;
+  --green:#25d39b;
 }
 
-body {
-    font-family: Arial, sans-serif;
-    background:
-        radial-gradient(circle at top, #26345f, #0b1024 60%);
-    color: white;
-    min-height: 100vh;
+body{
+  margin:0;
+  min-height:100vh;
+  color:var(--text);
+  font-family:Arial,Tahoma,sans-serif;
+  background:
+    radial-gradient(circle at 20% 0%,#213b70 0,#07101f 38%),
+    radial-gradient(circle at 100% 100%,#172d57 0,#07101f 45%);
 }
 
-.container {
-    width: 95%;
-    max-width: 950px;
-    margin: auto;
-    padding: 20px 0 40px;
+button,input{
+  font:inherit;
 }
 
-h1 {
-    text-align: center;
-    font-size: 38px;
-    margin-bottom: 8px;
+button{
+  cursor:pointer;
 }
 
-.subtitle {
-    text-align: center;
-    color: #aeb8df;
-    margin-bottom: 20px;
+.hidden{
+  display:none!important;
 }
 
-.panel {
-    background: rgba(20, 27, 57, .92);
-    border: 1px solid #394777;
-    border-radius: 20px;
-    padding: 20px;
-    margin-bottom: 18px;
-    box-shadow: 0 15px 40px rgba(0,0,0,.3);
+.app{
+  width:min(1200px,96%);
+  margin:auto;
+  padding:18px 0 30px;
 }
 
-input {
-    width: 100%;
-    padding: 14px;
-    border-radius: 12px;
-    border: none;
-    outline: none;
-    margin-bottom: 10px;
-    font-size: 16px;
+.logo{
+  text-align:center;
+  font-size:clamp(28px,6vw,48px);
+  font-weight:900;
+  margin:8px 0 3px;
+  text-shadow:0 5px 25px #0008;
 }
 
-button {
-    border: none;
-    border-radius: 12px;
-    padding: 13px 17px;
-    font-size: 15px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: .2s;
+.subtitle{
+  text-align:center;
+  color:var(--muted);
+  margin-bottom:18px;
 }
 
-button:hover {
-    transform: translateY(-2px);
+.card{
+  background:linear-gradient(145deg,#111e36,#0c162a);
+  border:1px solid #2a3d62;
+  border-radius:22px;
+  padding:16px;
+  box-shadow:0 15px 40px #0005;
 }
 
-.primary {
-    background: #5865f2;
-    color: white;
+.lobby{
+  max-width:480px;
+  margin:25px auto;
 }
 
-.green {
-    background: #20c997;
-    color: white;
+.input{
+  width:100%;
+  border:1px solid #344b73;
+  background:#081224;
+  color:white;
+  padding:14px;
+  border-radius:14px;
+  outline:none;
+  margin-bottom:10px;
 }
 
-.red {
-    background: #ef476f;
-    color: white;
+.input:focus{
+  border-color:#648cff;
 }
 
-.orange {
-    background: #ff9f1c;
-    color: white;
+.buttons{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
 }
 
-.blue {
-    background: #2196f3;
-    color: white;
+.btn{
+  border:0;
+  padding:14px;
+  border-radius:14px;
+  font-weight:900;
+  color:white;
 }
 
-.gray {
-    background: #46506f;
-    color: white;
+.create{
+  background:linear-gradient(135deg,#6472ff,#4351dc);
 }
 
-.room-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+.join{
+  background:linear-gradient(135deg,#20c997,#0ca678);
 }
 
-.room-code {
-    background: #080d1e;
-    border-radius: 12px;
-    padding: 14px;
-    text-align: center;
-    margin-top: 12px;
-    font-size: 20px;
-    letter-spacing: 3px;
+.invite{
+  width:100%;
+  margin-top:10px;
+  background:#168de2;
 }
 
-.hidden {
-    display: none !important;
+.roomCode{
+  text-align:center;
+  font-size:28px;
+  letter-spacing:5px;
+  font-weight:900;
+  color:var(--gold);
+  padding:15px;
+  background:#071020;
+  border-radius:15px;
+  margin-top:12px;
 }
 
-/* PLAYERS */
-
-.players {
-    display: grid;
-    grid-template-columns: 1fr 80px 1fr;
-    align-items: center;
-    gap: 12px;
+.gameGrid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 330px;
+  gap:15px;
+  align-items:start;
 }
 
-.player {
-    background: #111936;
-    padding: 15px;
-    border-radius: 17px;
+.players{
+  display:grid;
+  grid-template-columns:1fr 55px 1fr;
+  gap:8px;
+  align-items:center;
+  margin-bottom:12px;
 }
 
-.player-name {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 8px;
+.playerBox{
+  background:#091427;
+  border:1px solid #293b60;
+  padding:12px;
+  border-radius:16px;
 }
 
-.hp-container {
-    width: 100%;
-    height: 20px;
-    background: #303852;
-    border-radius: 20px;
-    overflow: hidden;
+.playerName{
+  font-weight:900;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
-.hp {
-    height: 100%;
-    width: 100%;
-    background: #20c997;
-    transition: .4s;
+.dot{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  display:inline-block;
+  vertical-align:middle;
+  margin-left:5px;
 }
 
-.hp-text {
-    margin-top: 6px;
-    font-size: 14px;
+.redDot{
+  background:var(--red);
+  box-shadow:0 0 12px var(--red);
 }
 
-.vs {
-    text-align: center;
-    font-size: 25px;
-    font-weight: bold;
-    color: #ffcc00;
+.blueDot{
+  background:var(--blue);
+  box-shadow:0 0 12px var(--blue);
 }
 
-/* TIMER */
-
-.timer-box {
-    text-align: center;
-    margin: 15px 0;
+.vs{
+  text-align:center;
+  font-weight:900;
+  color:var(--gold);
 }
 
-.timer {
-    display: inline-flex;
-    width: 75px;
-    height: 75px;
-    border-radius: 50%;
-    border: 6px solid #5865f2;
-    align-items: center;
-    justify-content: center;
-    font-size: 27px;
-    font-weight: bold;
+.status{
+  text-align:center;
+  background:#0a1529;
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:12px;
+  color:#dce6ff;
 }
 
-/* QUESTION */
-
-.question {
-    font-size: 23px;
-    text-align: center;
-    line-height: 1.7;
-    margin: 15px 0 20px;
+.boardWrap{
+  display:flex;
+  justify-content:center;
+  padding:8px 0;
 }
 
-.answers {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+.board{
+  width:min(92vw,620px);
+  aspect-ratio:1;
+  display:grid;
+  grid-template-columns:repeat(11,1fr);
+  grid-template-rows:repeat(11,1fr);
+  background:#dfe7f6;
+  border:5px solid #050a14;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 20px 50px #0008;
 }
 
-.answer {
-    background: #222b50;
-    color: white;
-    border: 2px solid #35406b;
-    min-height: 60px;
+.cell{
+  position:relative;
+  border:1px solid #aab6cc;
+  background:#f8faff;
 }
 
-.answer:hover {
-    background: #303b69;
+.path{
+  background:#eef3fb;
 }
 
-.answer.correct {
-    background: #168f68;
+.redHome{
+  background:linear-gradient(145deg,#ff9bb2,#ff557d);
 }
 
-.answer.wrong {
-    background: #c93659;
+.blueHome{
+  background:linear-gradient(145deg,#8ed0ff,#319fff);
 }
 
-/* POWERS */
-
-.power-title {
-    text-align: center;
-    margin-bottom: 12px;
+.center{
+  background:
+    linear-gradient(
+      45deg,
+      var(--red) 0 50%,
+      var(--blue) 50% 100%
+    );
 }
 
-.powers {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
+.finishRed{
+  background:#ffb4c4;
 }
 
-.power {
-    background: #242d50;
-    color: white;
-    min-height: 70px;
-    font-size: 13px;
+.finishBlue{
+  background:#a9d9ff;
 }
 
-.power span {
-    display: block;
-    font-size: 22px;
-    margin-bottom: 5px;
+.token{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:72%;
+  aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  border:3px solid #fff;
+  z-index:10;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  font-weight:900;
+  font-size:clamp(8px,2vw,14px);
+  box-shadow:
+    inset -5px -7px 10px #0005,
+    inset 4px 4px 8px #fff8,
+    0 4px 9px #0007;
+  transition:.2s;
 }
 
-.power:disabled {
-    opacity: .35;
-    cursor: not-allowed;
-    transform: none;
+.redToken{
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      #ffced8,
+      #ff3f68 45%,
+      #9e1233
+    );
 }
 
-/* LOG */
-
-.log {
-    background: #080d1e;
-    border-radius: 12px;
-    padding: 12px;
-    height: 130px;
-    overflow-y: auto;
-    font-size: 14px;
-    line-height: 1.8;
+.blueToken{
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      #d7efff,
+      #2698ff 45%,
+      #07509a
+    );
 }
 
-.status {
-    text-align: center;
-    padding: 10px;
-    border-radius: 10px;
-    background: #1b2548;
-    margin-bottom: 12px;
+.movable{
+  animation:pulse 1s infinite;
+  cursor:pointer;
 }
 
-/* GAME OVER */
-
-.game-over {
-    text-align: center;
-    padding: 30px;
+.movable:hover{
+  transform:translate(-50%,-50%) scale(1.15);
 }
 
-.game-over h2 {
-    font-size: 35px;
-    margin-bottom: 15px;
+@keyframes pulse{
+  0%,100%{
+    box-shadow:
+      0 0 0 0 #ffd43b00,
+      inset -5px -7px 10px #0005,
+      0 4px 9px #0007;
+  }
+
+  50%{
+    box-shadow:
+      0 0 0 8px #ffd43b55,
+      0 0 25px #ffd43b,
+      inset -5px -7px 10px #0005;
+  }
 }
 
-@media(max-width:650px) {
+.dicePanel{
+  text-align:center;
+}
 
-    h1 {
-        font-size: 30px;
-    }
+.turnText{
+  font-weight:900;
+  margin-bottom:8px;
+}
 
-    .players {
-        grid-template-columns: 1fr 45px 1fr;
-    }
+.dice{
+  width:100px;
+  height:100px;
+  margin:10px auto 15px;
+  border-radius:22px;
+  background:linear-gradient(145deg,#fff,#d9e0ec);
+  color:#111827;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:58px;
+  font-weight:900;
+  box-shadow:
+    inset -8px -8px 18px #9aa7bc88,
+    0 15px 30px #0007;
+}
 
-    .answers {
-        grid-template-columns: 1fr;
-    }
+.dice.rolling{
+  animation:roll .7s ease;
+}
 
-    .powers {
-        grid-template-columns: repeat(3, 1fr);
-    }
+@keyframes roll{
+  0%{
+    transform:rotate(0) scale(1);
+  }
 
-    .power {
-        min-height: 65px;
-    }
+  25%{
+    transform:rotate(90deg) scale(1.08);
+  }
 
-    .room-buttons {
-        grid-template-columns: 1fr;
-    }
+  50%{
+    transform:rotate(180deg) scale(.95);
+  }
+
+  75%{
+    transform:rotate(270deg) scale(1.08);
+  }
+
+  100%{
+    transform:rotate(360deg) scale(1);
+  }
+}
+
+.rollBtn{
+  width:100%;
+  border:0;
+  padding:15px;
+  border-radius:15px;
+  background:linear-gradient(135deg,#ffd43b,#f59f00);
+  color:#241800;
+  font-weight:900;
+  font-size:18px;
+}
+
+.rollBtn:disabled{
+  opacity:.35;
+  cursor:not-allowed;
+}
+
+.message{
+  min-height:25px;
+  margin-top:10px;
+  color:#cbd6ef;
+}
+
+.chat{
+  height:570px;
+  display:flex;
+  flex-direction:column;
+}
+
+.chatHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-weight:900;
+  padding-bottom:12px;
+  border-bottom:1px solid #293b60;
+}
+
+.soundBtn{
+  border:0;
+  background:#203354;
+  color:white;
+  width:38px;
+  height:38px;
+  border-radius:12px;
+}
+
+.messages{
+  flex:1;
+  overflow-y:auto;
+  padding:12px 3px;
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+}
+
+.chatMessage{
+  max-width:88%;
+  padding:9px 12px;
+  border-radius:15px;
+  animation:messageIn .2s ease;
+  word-break:break-word;
+}
+
+@keyframes messageIn{
+  from{
+    opacity:0;
+    transform:translateY(8px);
+  }
+
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+.chatMine{
+  align-self:flex-start;
+  background:linear-gradient(135deg,#4659df,#3444ae);
+  border-bottom-right-radius:4px;
+}
+
+.chatOther{
+  align-self:flex-end;
+  background:#202f4d;
+  border-bottom-left-radius:4px;
+}
+
+.chatName{
+  font-size:11px;
+  opacity:.7;
+  margin-bottom:3px;
+}
+
+.quickEmoji{
+  display:flex;
+  gap:5px;
+  overflow-x:auto;
+  padding:6px 0;
+}
+
+.emojiBtn{
+  min-width:38px;
+  height:38px;
+  border:0;
+  border-radius:11px;
+  background:#1a2a48;
+  cursor:pointer;
+  font-size:20px;
+}
+
+.sendRow{
+  display:grid;
+  grid-template-columns:1fr 48px;
+  gap:6px;
+}
+
+.chatInput{
+  width:100%;
+  background:#071224;
+  color:white;
+  border:1px solid #31466d;
+  border-radius:13px;
+  padding:11px;
+  outline:none;
+}
+
+.sendBtn{
+  border:0;
+  border-radius:13px;
+  background:#25b5ff;
+  color:white;
+  font-size:20px;
+}
+
+.winOverlay{
+  position:fixed;
+  inset:0;
+  background:#020713cc;
+  backdrop-filter:blur(7px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+  padding:20px;
+}
+
+.winCard{
+  width:min(470px,100%);
+  text-align:center;
+  background:linear-gradient(145deg,#17294a,#0b1528);
+  border:1px solid #49618e;
+  border-radius:28px;
+  padding:30px 20px;
+  box-shadow:0 30px 80px #000;
+  animation:winIn .6s cubic-bezier(.2,.9,.2,1);
+}
+
+@keyframes winIn{
+  from{
+    transform:scale(.5) rotate(-4deg);
+    opacity:0;
+  }
+
+  to{
+    transform:scale(1) rotate(0);
+    opacity:1;
+  }
+}
+
+.trophy{
+  font-size:80px;
+  animation:trophy 1s infinite alternate;
+}
+
+@keyframes trophy{
+  from{
+    transform:translateY(0) rotate(-5deg);
+  }
+
+  to{
+    transform:translateY(-8px) rotate(5deg);
+  }
+}
+
+.winTitle{
+  font-size:34px;
+  color:var(--gold);
+  margin:10px 0;
+}
+
+.winText{
+  line-height:1.9;
+  color:#d7e1f7;
+}
+
+.again{
+  width:100%;
+  border:0;
+  border-radius:15px;
+  padding:15px;
+  background:linear-gradient(135deg,#25d39b,#099268);
+  color:white;
+  font-weight:900;
+  margin-top:10px;
+}
+
+.confetti{
+  position:fixed;
+  width:10px;
+  height:16px;
+  top:-25px;
+  z-index:1100;
+  animation:fall linear forwards;
+}
+
+@keyframes fall{
+  to{
+    transform:
+      translateY(110vh)
+      rotate(720deg);
+  }
+}
+
+.captureFlash{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  font-size:70px;
+  z-index:1200;
+  animation:flash .8s ease forwards;
+  pointer-events:none;
+}
+
+@keyframes flash{
+  0%{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.4);
+  }
+
+  35%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.3);
+  }
+
+  100%{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(1.8);
+  }
+}
+
+@media(max-width:850px){
+
+  .gameGrid{
+    grid-template-columns:1fr;
+  }
+
+  .chat{
+    height:360px;
+  }
+
+}
+
+@media(max-width:500px){
+
+  .app{
+    width:97%;
+    padding-top:8px;
+  }
+
+  .card{
+    border-radius:17px;
+    padding:11px;
+  }
+
+  .board{
+    border-width:3px;
+    border-radius:12px;
+  }
+
+  .players{
+    grid-template-columns:1fr 35px 1fr;
+  }
+
+  .playerBox{
+    padding:9px;
+    font-size:13px;
+  }
+
+  .dice{
+    width:80px;
+    height:80px;
+    font-size:46px;
+  }
+
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-
-    <h1>⚔️ Battle Arena</h1>
-    <div class="subtitle">نبرد دو نفره با دانش و سرعت</div>
-
-    <!-- LOBBY -->
-
-    <div id="lobby" class="panel">
-
-        <h2>🏠 ورود به بازی</h2>
-
-        <br>
-
-        <input
-            id="playerName"
-            type="text"
-            placeholder="نام بازیکن"
-            maxlength="15"
-        >
-
-        <div class="room-buttons">
-
-            <button class="primary" onclick="createRoom()">
-                ➕ ساخت اتاق
-            </button>
-
-            <button class="green" onclick="joinRoom()">
-                🚪 ورود به اتاق
-            </button>
-
-        </div>
-
-        <br>
-
-        <input
-            id="roomInput"
-            type="text"
-            placeholder="کد اتاق"
-            maxlength="10"
-        >
-
-        <div id="roomInfo" class="hidden">
-
-            <div class="room-code">
-                کد اتاق:
-                <strong id="roomCode"></strong>
-            </div>
-
-            <br>
-
-            <button
-                class="blue"
-                style="width:100%"
-                onclick="inviteTelegram()"
-            >
-                📱 دعوت دوست در تلگرام
-            </button>
-
-        </div>
-
-    </div>
-
-
-    <!-- GAME -->
-
-    <div id="game" class="hidden">
-
-        <div id="status" class="status">
-            منتظر بازیکن دوم...
-        </div>
-
-        <div class="panel">
-
-            <div class="players">
-
-                <div class="player">
-
-                    <div class="player-name">
-                        👤 <span id="myName">بازیکن</span>
-                    </div>
-
-                    <div class="hp-container">
-                        <div id="myHp" class="hp"></div>
-                    </div>
-
-                    <div class="hp-text">
-                        ❤️ HP:
-                        <span id="myHpText">100</span>
-                    </div>
-
-                    <div>
-                        🔥 Combo:
-                        <span id="myCombo">0</span>
-                    </div>
-
-                </div>
-
-                <div class="vs">
-                    VS
-                </div>
-
-                <div class="player">
-
-                    <div class="player-name">
-                        👤 <span id="enemyName">حریف</span>
-                    </div>
-
-                    <div class="hp-container">
-                        <div id="enemyHp" class="hp"></div>
-                    </div>
-
-                    <div class="hp-text">
-                        ❤️ HP:
-                        <span id="enemyHpText">100</span>
-                    </div>
-
-                    <div>
-                        🔥 Combo:
-                        <span id="enemyCombo">0</span>
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="panel">
-
-            <div class="timer-box">
-                <div id="timer" class="timer">
-                    15
-                </div>
-            </div>
-
-            <div id="question" class="question">
-                منتظر سؤال...
-            </div>
-
-            <div id="answers" class="answers"></div>
-
-        </div>
-
-
-        <div class="panel">
-
-            <div class="power-title">
-                ⚡ قدرت‌های ویژه
-            </div>
-
-            <div class="powers">
-
-                <button
-                    id="shieldBtn"
-                    class="power"
-                    onclick="usePower('shield')"
-                >
-                    <span>🛡️</span>
-                    Shield
-                </button>
-
-                <button
-                    id="doubleBtn"
-                    class="power"
-                    onclick="usePower('double')"
-                >
-                    <span>⚔️</span>
-                    Double
-                </button>
-
-                <button
-                    id="fiftyBtn"
-                    class="power"
-                    onclick="usePower('fifty')"
-                >
-                    <span>🎯</span>
-                    50/50
-                </button>
-
-                <button
-                    id="healBtn"
-                    class="power"
-                    onclick="usePower('heal')"
-                >
-                    <span>💚</span>
-                    Heal
-                </button>
-
-                <button
-                    id="fastBtn"
-                    class="power"
-                    onclick="usePower('fast')"
-                >
-                    <span>⚡</span>
-                    حمله سریع
-                </button>
-
-            </div>
-
-        </div>
-
-
-        <div class="panel">
-
-            <h3>📜 گزارش نبرد</h3>
-
-            <br>
-
-            <div id="battleLog" class="log">
-                بازی آماده است...
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- GAME OVER -->
-
-    <div id="gameOver" class="panel hidden">
-
-        <div class="game-over">
-
-            <h2 id="winnerText">
-                🏆 برنده!
-            </h2>
-
-            <p id="resultText"></p>
-
-            <br>
-
-            <button
-                class="primary"
-                onclick="location.reload()"
-            >
-                🔄 بازی دوباره
-            </button>
-
-        </div>
-
-    </div>
+<div class="app">
+
+<div class="logo">
+🎲 LUDO BATTLE
+</div>
+
+<div class="subtitle">
+نبرد منچ آنلاین دو نفره 🔥
+</div>
+
+<section id="lobby" class="card lobby">
+
+<h2>🏠 ورود به بازی</h2>
+
+<input
+id="nameInput"
+class="input"
+maxlength="20"
+placeholder="اسم بازیکن"
+/>
+
+<div class="buttons">
+
+<button
+id="createBtn"
+class="btn create">
+➕ ساخت اتاق
+</button>
+
+<button
+id="joinBtn"
+class="btn join">
+🚪 ورود به اتاق
+</button>
 
 </div>
 
+<input
+id="roomInput"
+class="input"
+maxlength="8"
+placeholder="کد اتاق"
+/>
+
+<div
+id="roomInfo"
+class="hidden">
+
+<div>
+کد دعوت:
+</div>
+
+<div
+id="roomCode"
+class="roomCode">
+</div>
+
+<button
+id="inviteBtn"
+class="btn invite">
+📱 دعوت دوست در تلگرام
+</button>
+
+</div>
+
+</section>
+
+<section
+id="game"
+class="hidden">
+
+<div
+id="status"
+class="card status">
+در انتظار بازیکن دوم...
+</div>
+
+<div class="gameGrid">
+
+<div>
+
+<div class="card">
+
+<div class="players">
+
+<div class="playerBox">
+
+<div class="playerName">
+
+<span class="dot redDot"></span>
+
+<span id="myName">
+بازیکن ۱
+</span>
+
+</div>
+
+<div>
+🏆 مهره‌های رسیده:
+<span id="myScore">0</span>/4
+</div>
+
+</div>
+
+<div class="vs">
+VS
+</div>
+
+<div class="playerBox">
+
+<div class="playerName">
+
+<span class="dot blueDot"></span>
+
+<span id="enemyName">
+حریف
+</span>
+
+</div>
+
+<div>
+🏆 مهره‌های رسیده:
+<span id="enemyScore">0</span>/4
+</div>
+
+</div>
+
+</div>
+
+<div class="boardWrap">
+<div id="board" class="board"></div>
+</div>
+
+</div>
+
+<div class="card dicePanel">
+
+<div>
+نوبت:
+<strong id="turnText">
+-
+</strong>
+</div>
+
+<div
+id="dice"
+class="dice">
+🎲
+</div>
+
+<button
+id="rollBtn"
+class="rollBtn">
+🎲 انداختن تاس
+</button>
+
+<div
+id="gameMessage"
+class="message">
+</div>
+
+</div>
+
+</div>
+
+<div class="card chat">
+
+<div class="chatHeader">
+
+<span>
+💬 چت بازی
+</span>
+
+<button
+id="soundBtn"
+class="soundBtn"
+title="روشن/خاموش کردن صدا">
+🔊
+</button>
+
+</div>
+
+<div
+id="messages"
+class="messages">
+</div>
+
+<div
+id="quickEmoji"
+class="quickEmoji">
+</div>
+
+<div class="sendRow">
+
+<input
+id="chatInput"
+class="chatInput"
+maxlength="200"
+placeholder="پیامت را بنویس..."
+/>
+
+<button
+id="sendBtn"
+class="sendBtn">
+➤
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+<div
+id="winOverlay"
+class="winOverlay hidden">
+
+<div class="winCard">
+
+<div class="trophy">
+🏆
+</div>
+
+<div
+id="winTitle"
+class="winTitle">
+تبریک!
+</div>
+
+<div
+id="winText"
+class="winText">
+</div>
+
+<button
+id="againBtn"
+class="again">
+🔄 بازی دوباره
+</button>
+
+</div>
+
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
 
-let socket;
+const socket = io();
 
 let roomCode = "";
-let playerName = "";
+let myColor = "red";
+let myTurn = false;
+let gameStarted = false;
+let currentDice = null;
+let soundEnabled = true;
 
-let myHP = 100;
-let enemyHP = 100;
+const path = [
 
-let myCombo = 0;
-let enemyCombo = 0;
+[0,4],[0,5],[0,6],
+[1,6],[2,6],[3,6],[4,6],
+[4,7],[4,8],[4,9],[4,10],
+[5,10],
+[6,10],[6,9],[6,8],[6,7],[6,6],
+[7,6],[8,6],[9,6],[10,6],
+[10,5],[10,4],
+[10,3],[10,2],[10,1],[10,0],
+[9,0],[8,0],[7,0],
+[6,0],
+[6,1],[6,2],[6,3],[6,4],[6,5],
+[5,0],
+[4,0],[4,1],[4,2],[4,3],[4,4],
+[3,4],[2,4],[1,4]
 
-let timeLeft = 15;
-let timerInterval = null;
+];
 
-let currentQuestion = null;
+let audioContext = null;
 
-let powers = {
-    shield: true,
-    double: true,
-    fifty: true,
-    heal: true,
-    fast: true
-};
+function audio(){
 
+    if(!soundEnabled) return null;
 
-/* =========================
-   CONNECTION
-========================= */
+    try{
 
-try {
+        if(!audioContext){
 
-    socket = io();
+            audioContext =
+                new (
+                    window.AudioContext ||
+                    window.webkitAudioContext
+                )();
 
-    socket.on("connect", () => {
+        }
 
-        addLog("🟢 اتصال به سرور برقرار شد.");
+        if(
+            audioContext.state ===
+            "suspended"
+        ){
 
-    });
+            audioContext.resume();
 
-    socket.on("disconnect", () => {
+        }
 
-        addLog("🔴 اتصال به سرور قطع شد.");
+        return audioContext;
 
-        setStatus("اتصال به سرور قطع شد.");
+    }catch{
 
-    });
-
-} catch(e) {
-
-    console.log(e);
-
-}
-
-
-/* =========================
-   CREATE ROOM
-========================= */
-
-function createRoom() {
-
-    playerName =
-        document.getElementById("playerName").value.trim();
-
-    if (!playerName) {
-
-        alert("ابتدا نام خودت را وارد کن.");
-        return;
+        return null;
 
     }
 
-    if (!socket) {
+}
 
-        alert("اتصال به سرور برقرار نیست.");
-        return;
+function tone(
+    frequency,
+    duration,
+    type="sine",
+    volume=.05
+){
 
-    }
+    const ctx = audio();
 
-    socket.emit("createRoom", {
+    if(!ctx) return;
 
-        name: playerName
+    const osc =
+        ctx.createOscillator();
 
-    });
+    const gain =
+        ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.value = frequency;
+
+    gain.gain.setValueAtTime(
+        volume,
+        ctx.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .001,
+        ctx.currentTime + duration
+    );
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+
+    osc.stop(
+        ctx.currentTime + duration
+    );
 
 }
 
+function diceSound(){
 
-/* =========================
-   JOIN ROOM
-========================= */
+    if(!soundEnabled) return;
 
-function joinRoom() {
+    for(let i=0;i<6;i++){
 
-    playerName =
-        document.getElementById("playerName").value.trim();
+        setTimeout(
+            () =>
+                tone(
+                    180 + Math.random()*300,
+                    .08,
+                    "square",
+                    .025
+                ),
+            i*85
+        );
+
+    }
+
+}
+
+function winSound(){
+
+    if(!soundEnabled) return;
+
+    const notes =
+        [523,659,784,1046];
+
+    notes.forEach(
+        (n,i) =>
+            setTimeout(
+                () =>
+                    tone(
+                        n,
+                        .25,
+                        "sine",
+                        .08
+                    ),
+                i*130
+            )
+    );
+
+}
+
+function createBoard(){
+
+    const board =
+        document.getElementById("board");
+
+    board.innerHTML = "";
+
+    for(let row=0;row<11;row++){
+
+        for(let col=0;col<11;col++){
+
+            const cell =
+                document.createElement("div");
+
+            cell.className = "cell";
+
+            cell.dataset.row = row;
+            cell.dataset.col = col;
+
+            const index =
+                path.findIndex(
+                    p =>
+                        p[0]===row &&
+                        p[1]===col
+                );
+
+            if(index >= 0){
+                cell.classList.add("path");
+            }
+
+            if(
+                row<=3 &&
+                col<=3
+            ){
+                cell.classList.add("redHome");
+            }
+
+            if(
+                row>=7 &&
+                col>=7
+            ){
+                cell.classList.add("blueHome");
+            }
+
+            if(
+                row>=4 &&
+                row<=6 &&
+                col>=4 &&
+                col<=6
+            ){
+                cell.classList.add("center");
+            }
+
+            board.appendChild(cell);
+
+        }
+
+    }
+
+}
+
+function getCoordinate(
+    position,
+    color
+){
+
+    if(position === -1){
+
+        return color === "red"
+            ? {row:2,col:2}
+            : {row:8,col:8};
+
+    }
+
+    if(position < 52){
+
+        const p =
+            path[
+                position % 52
+            ];
+
+        return {
+            row:p[0],
+            col:p[1]
+        };
+
+    }
+
+    if(color === "red"){
+
+        const finalPath = [
+            [5,1],
+            [5,2],
+            [5,3],
+            [5,4],
+            [5,5]
+        ];
+
+        const p =
+            finalPath[
+                Math.min(
+                    4,
+                    position-52
+                )
+            ];
+
+        return {
+            row:p[0],
+            col:p[1]
+        };
+
+    }
+
+    const finalPath = [
+        [1,5],
+        [2,5],
+        [3,5],
+        [4,5],
+        [5,5]
+    ];
+
+    const p =
+        finalPath[
+            Math.min(
+                4,
+                position-52
+            )
+        ];
+
+    return {
+        row:p[0],
+        col:p[1]
+    };
+
+}
+
+function addToken(
+    position,
+    color,
+    index,
+    mine
+){
+
+    const c =
+        getCoordinate(
+            position,
+            color
+        );
+
+    const cell =
+        document.querySelector(
+            `[data-row="${c.row}"][data-col="${c.col}"]`
+        );
+
+    if(!cell) return;
+
+    const token =
+        document.createElement("div");
+
+    token.className =
+        "token " +
+        (
+            color==="red"
+                ? "redToken"
+                : "blueToken"
+        );
+
+    token.textContent =
+        index+1;
+
+    const offsets = [
+        [-15,-15],
+        [15,-15],
+        [-15,15],
+        [15,15]
+    ];
+
+    const offset =
+        offsets[index];
+
+    token.style.marginLeft =
+        offset[0]+"px";
+
+    token.style.marginTop =
+        offset[1]+"px";
+
+    if(
+        mine &&
+        myTurn &&
+        currentDice !== null
+    ){
+
+        const positionCanMove =
+            position === -1
+                ? currentDice === 6
+                : (
+                    position !== 56 &&
+                    position + currentDice <= 56
+                );
+
+        if(positionCanMove){
+
+            token.classList.add(
+                "movable"
+            );
+
+            token.onclick =
+            () => {
+
+                socket.emit(
+                    "movePiece",
+                    {
+                        pieceIndex:index
+                    }
+                );
+
+            };
+
+        }
+
+    }
+
+    cell.appendChild(token);
+
+}
+
+function renderPieces(
+    myPieces,
+    opponentPieces
+){
+
+    createBoard();
+
+    myPieces.forEach(
+        (position,index) => {
+
+            addToken(
+                position,
+                myColor,
+                index,
+                true
+            );
+
+        }
+    );
+
+    const enemyColor =
+        myColor === "red"
+            ? "blue"
+            : "red";
+
+    opponentPieces.forEach(
+        (position,index) => {
+
+            addToken(
+                position,
+                enemyColor,
+                index,
+                false
+            );
+
+        }
+    );
+
+}
+
+function renderState(data){
 
     roomCode =
-        document.getElementById("roomInput").value.trim();
+        data.roomCode;
 
-    if (!playerName) {
+    myColor =
+        data.myColor;
 
-        alert("ابتدا نام خودت را وارد کن.");
-        return;
+    myTurn =
+        data.myTurn;
 
-    }
+    currentDice =
+        data.dice;
 
-    if (!roomCode) {
+    gameStarted =
+        data.gameStarted;
 
-        alert("کد اتاق را وارد کن.");
-        return;
+    document.getElementById(
+        "myName"
+    ).textContent =
+        data.myName;
 
-    }
+    document.getElementById(
+        "enemyName"
+    ).textContent =
+        data.opponentName;
 
-    socket.emit("joinRoom", {
+    const myFinished =
+        data.myPieces.filter(
+            p=>p===56
+        ).length;
 
-        roomCode: roomCode,
-        name: playerName
+    const enemyFinished =
+        data.opponentPieces.filter(
+            p=>p===56
+        ).length;
 
-    });
+    document.getElementById(
+        "myScore"
+    ).textContent =
+        myFinished;
 
-}
+    document.getElementById(
+        "enemyScore"
+    ).textContent =
+        enemyFinished;
 
+    document.getElementById(
+        "turnText"
+    ).textContent =
+        myTurn
+            ? "🎯 تو"
+            : "⏳ حریف";
 
-/* =========================
-   ROOM CREATED
-========================= */
+    const dice =
+        document.getElementById("dice");
 
-if (socket) {
+    dice.textContent =
+        data.dice === null
+            ? "🎲"
+            : data.dice;
 
-socket.on("roomCreated", data => {
+    document.getElementById(
+        "rollBtn"
+    ).disabled =
+        !myTurn ||
+        data.dice !== null ||
+        !data.gameStarted;
 
-    roomCode = data.roomCode || data.code;
-
-    document
-        .getElementById("roomCode")
-        .textContent = roomCode;
-
-    document
-        .getElementById("roomInfo")
-        .classList.remove("hidden");
-
-    setStatus(
-        "اتاق ساخته شد؛ منتظر ورود دوستت هستیم..."
+    renderPieces(
+        data.myPieces,
+        data.opponentPieces
     );
 
-    addLog(
-        "🏠 اتاق " + roomCode + " ساخته شد."
-    );
+    if(data.gameStarted){
 
-});
-
-}
-
-
-/* =========================
-   PLAYER JOINED
-========================= */
-
-if (socket) {
-
-socket.on("playerJoined", data => {
-
-    setStatus("🟢 بازیکن دوم وارد شد!");
-
-    if (data.enemyName) {
-
-        document
-            .getElementById("enemyName")
-            .textContent = data.enemyName;
+        document.getElementById(
+            "status"
+        ).textContent =
+            myTurn
+                ? "🎯 نوبت توست! تاس بینداز."
+                : "⏳ منتظر نوبت حریف...";
 
     }
 
-    addLog("⚔️ حریف وارد نبرد شد.");
-
-});
-
 }
 
+const emojis = [
+    "😂","😎","🔥","😱","👏",
+    "😍","🎉","😭","🤣","😡",
+    "👍","❤️","🎲"
+];
 
-/* =========================
-   START GAME
-========================= */
-
-if (socket) {
-
-socket.on("gameStart", data => {
-
-    document
-        .getElementById("lobby")
-        .classList.add("hidden");
-
-    document
-        .getElementById("game")
-        .classList.remove("hidden");
-
-    document
-        .getElementById("myName")
-        .textContent = playerName;
-
-    if (data.enemyName) {
-
-        document
-            .getElementById("enemyName")
-            .textContent = data.enemyName;
-
-    }
-
-    setStatus("🔥 نبرد شروع شد!");
-
-    if (data.question) {
-
-        showQuestion(data.question);
-
-    }
-
-});
-
-}
-
-
-/* =========================
-   NEW QUESTION
-========================= */
-
-if (socket) {
-
-socket.on("newQuestion", question => {
-
-    showQuestion(question);
-
-});
-
-}
-
-
-/* =========================
-   SHOW QUESTION
-========================= */
-
-function showQuestion(question) {
-
-    currentQuestion = question;
-
-    document
-        .getElementById("question")
-        .textContent =
-        question.question || question.text || "سؤال";
-
-    const answers =
-        question.answers ||
-        question.options ||
-        [];
+function createEmojiButtons(){
 
     const box =
-        document.getElementById("answers");
+        document.getElementById(
+            "quickEmoji"
+        );
 
     box.innerHTML = "";
 
-    answers.forEach((answer, index) => {
+    emojis.forEach(
+        emoji => {
 
-        const btn =
-            document.createElement("button");
+            const button =
+                document.createElement("button");
 
-        btn.className = "answer";
+            button.className =
+                "emojiBtn";
 
-        btn.textContent =
-            answer.text || answer;
+            button.textContent =
+                emoji;
 
-        btn.onclick = () => {
+            button.onclick =
+            () => {
 
-            answerQuestion(index);
+                socket.emit(
+                    "emoji",
+                    {emoji}
+                );
 
-        };
+            };
 
-        box.appendChild(btn);
+            box.appendChild(button);
 
-    });
-
-    startTimer();
-
-}
-
-
-/* =========================
-   ANSWER
-========================= */
-
-function answerQuestion(index) {
-
-    stopTimer();
-
-    const buttons =
-        document.querySelectorAll(".answer");
-
-    buttons.forEach(btn => {
-
-        btn.disabled = true;
-
-    });
-
-    if (socket) {
-
-        socket.emit("answer", {
-
-            roomCode: roomCode,
-            answer: index,
-            questionId:
-                currentQuestion.id || null
-
-        });
-
-    }
-
-}
-
-
-/* =========================
-   ANSWER RESULT
-========================= */
-
-if (socket) 
-
-socket.on("answerResult", data => {
-
-    const buttons =
-        document.querySelectorAll(".answer");
-
-    buttons.forEach((button, index) => {
-
-        button.disabled = true;
-
-        if (index === data.correctIndex) {
-            button.classList.add("correct");
         }
-
-    });
-
-    if (data.correct) {
-
-        myCombo++;
-
-        document
-            .getElementById("myCombo")
-            .textContent = myCombo;
-
-        setStatus("✅ پاسخ درست!");
-
-        addLog(
-            "✅ آفرین! پاسخ درست بود."
-        );
-
-    } else {
-
-        myCombo = 0;
-
-        document
-            .getElementById("myCombo")
-            .textContent = 0;
-
-        buttons.forEach((button, index) => {
-
-            if (index !== data.correctIndex) {
-                button.classList.add("wrong");
-            }
-
-        });
-
-        setStatus("❌ پاسخ غلط!");
-
-        addLog(
-            "❌ پاسخ اشتباه بود."
-        );
-
-    }
-
-    if (data.damage) {
-
-        addLog(
-            "⚔️ " + data.damage + " آسیب وارد شد!"
-        );
-
-    }
-
-});
-}
-
-
-/* =========================
-   HP UPDATE
-========================= */
-
-if (socket) {
-
-socket.on("hpUpdate", data => {
-
-    if (data.myHP !== undefined) {
-
-        myHP = data.myHP;
-
-        updateHP(
-            "myHp",
-            "myHpText",
-            myHP
-        );
-
-    }
-
-    if (data.enemyHP !== undefined) {
-
-        enemyHP = data.enemyHP;
-
-        updateHP(
-            "enemyHp",
-            "enemyHpText",
-            enemyHP
-        );
-
-    }
-
-});
-
-}
-
-
-/* =========================
-   POWER
-========================= */
-
-function usePower(power) {
-
-    if (!powers[power]) {
-
-        alert("این قدرت قبلاً استفاده شده!");
-        return;
-
-    }
-
-    powers[power] = false;
-
-    const buttonMap = {
-
-        shield: "shieldBtn",
-        double: "doubleBtn",
-        fifty: "fiftyBtn",
-        heal: "healBtn",
-        fast: "fastBtn"
-
-    };
-
-    document
-        .getElementById(buttonMap[power])
-        .disabled = true;
-
-
-    if (power === "fifty") {
-
-        removeTwoWrongAnswers();
-
-    }
-
-
-    if (socket) {
-
-        socket.emit("usePower", {
-
-            roomCode: roomCode,
-            power: power
-
-        });
-
-    }
-
-    addLog(
-        "⚡ قدرت " + power + " فعال شد!"
     );
 
 }
 
+function addChat(
+    name,
+    color,
+    message
+){
 
-/* =========================
-   50/50
-========================= */
-
-function removeTwoWrongAnswers() {
-
-    const buttons =
-        Array.from(
-            document.querySelectorAll(".answer")
+    const box =
+        document.getElementById(
+            "messages"
         );
 
-    if (buttons.length <= 2) return;
+    const item =
+        document.createElement("div");
 
-    let indexes = [];
+    const mine =
+        color === myColor;
 
-    while (indexes.length < 2) {
+    item.className =
+        "chatMessage " +
+        (
+            mine
+                ? "chatMine"
+                : "chatOther"
+        );
 
-        let random =
-            Math.floor(
-                Math.random() * buttons.length
+    const nameElement =
+        document.createElement("div");
+
+    nameElement.className =
+        "chatName";
+
+    nameElement.textContent =
+        name;
+
+    const messageElement =
+        document.createElement("div");
+
+    messageElement.textContent =
+        message;
+
+    item.appendChild(
+        nameElement
+    );
+
+    item.appendChild(
+        messageElement
+    );
+
+    box.appendChild(
+        item
+    );
+
+    box.scrollTop =
+        box.scrollHeight;
+
+}
+
+function sendChat(){
+
+    const input =
+        document.getElementById(
+            "chatInput"
+        );
+
+    const message =
+        input.value.trim();
+
+    if(!message) return;
+
+    socket.emit(
+        "chatMessage",
+        {
+            message
+        }
+    );
+
+    input.value = "";
+
+    input.focus();
+
+}
+
+function confetti(){
+
+    const pieces = 100;
+
+    for(let i=0;i<pieces;i++){
+
+        const el =
+            document.createElement("div");
+
+        el.className =
+            "confetti";
+
+        el.style.left =
+            Math.random()*100+"vw";
+
+        el.style.animationDuration =
+            (2+Math.random()*3)+"s";
+
+        el.style.animationDelay =
+            Math.random()*1.5+"s";
+
+        const colors = [
+            "#ff3f68",
+            "#2698ff",
+            "#ffd43b",
+            "#25d39b",
+            "#b197fc",
+            "#ffffff"
+        ];
+
+        el.style.background =
+            colors[
+                Math.floor(
+                    Math.random() *
+                    colors.length
+                )
+            ];
+
+        document.body.appendChild(el);
+
+        setTimeout(
+            () => el.remove(),
+            6000
+        );
+
+    }
+
+}
+
+function captureEffect(){
+
+    const el =
+        document.createElement("div");
+
+    el.className =
+        "captureFlash";
+
+    el.textContent =
+        "💥";
+
+    document.body.appendChild(el);
+
+    setTimeout(
+        () => el.remove(),
+        850
+    );
+
+    tone(
+        120,
+        .15,
+        "sawtooth",
+        .06
+    );
+
+}
+
+document.getElementById(
+    "createBtn"
+).onclick =
+function(){
+
+    const name =
+        document.getElementById(
+            "nameInput"
+        ).value.trim();
+
+    if(!name){
+
+        alert(
+            "اول اسمت را وارد کن."
+        );
+
+        return;
+
+    }
+
+    socket.emit(
+        "createRoom",
+        {name}
+    );
+
+};
+
+document.getElementById(
+    "joinBtn"
+).onclick =
+function(){
+
+    const name =
+        document.getElementById(
+            "nameInput"
+        ).value.trim();
+
+    const code =
+        document.getElementById(
+            "roomInput"
+        ).value
+        .trim()
+        .toUpperCase();
+
+    if(!name){
+
+        alert(
+            "اول اسمت را وارد کن."
+        );
+
+        return;
+
+    }
+
+    if(!code){
+
+        alert(
+            "کد اتاق را وارد کن."
+        );
+
+        return;
+
+    }
+
+    socket.emit(
+        "joinRoom",
+        {
+            name,
+            roomCode:code
+        }
+    );
+
+};
+
+socket.on(
+    "roomCreated",
+    data => {
+
+        roomCode =
+            data.roomCode;
+
+        document.getElementById(
+            "roomCode"
+        ).textContent =
+            roomCode;
+
+        document.getElementById(
+            "roomInfo"
+        ).classList
+        .remove("hidden");
+
+        document.getElementById(
+            "game"
+        ).classList
+        .remove("hidden");
+
+        document.getElementById(
+            "status"
+        ).textContent =
+            "🏠 کد اتاق را برای دوستت بفرست.";
+
+    }
+);
+
+socket.on(
+    "gameStarted",
+    () => {
+
+        document.getElementById(
+            "lobby"
+        ).classList
+        .add("hidden");
+
+        document.getElementById(
+            "game"
+        ).classList
+        .remove("hidden");
+
+        document.getElementById(
+            "status"
+        ).textContent =
+            "🎲 بازی شروع شد!";
+
+    }
+);
+
+socket.on(
+    "gameState",
+    data => {
+
+        if(data.gameStarted){
+
+            document.getElementById(
+                "lobby"
+            ).classList
+            .add("hidden");
+
+            document.getElementById(
+                "game"
+            ).classList
+            .remove("hidden");
+
+        }
+
+        window.lastMyPieces =
+            [...data.myPieces];
+
+        window.lastOpponentPieces =
+            [...data.opponentPieces];
+
+        renderState(data);
+
+    }
+);
+
+socket.on(
+    "diceRolled",
+    data => {
+
+        const dice =
+            document.getElementById(
+                "dice"
             );
 
-        if (!indexes.includes(random)) {
+        dice.classList.remove(
+            "rolling"
+        );
 
-            indexes.push(random);
+        void dice.offsetWidth;
+
+        dice.classList.add(
+            "rolling"
+        );
+
+        diceSound();
+
+        setTimeout(
+            () => {
+
+                dice.textContent =
+                    data.dice;
+
+            },
+            350
+        );
+
+        if(data.dice === 6){
+
+            document.getElementById(
+                "gameMessage"
+            ).textContent =
+                "🎉 شش آوردی! دوباره نوبت توست.";
 
         }
 
     }
+);
 
-    indexes.forEach(index => {
+socket.on(
+    "noMove",
+    data => {
 
-        buttons[index].disabled = true;
-        buttons[index].style.opacity = ".25";
+        document.getElementById(
+            "gameMessage"
+        ).textContent =
+            `🎲 عدد ${data.dice} آمد، ولی مهره‌ای برای حرکت نداری.`;
 
-    });
+    }
+);
 
-}
+socket.on(
+    "pieceMoved",
+    data => {
 
+        if(
+            window.lastMyPieces &&
+            window.lastOpponentPieces
+        ){
 
-/* =========================
-   TIMER
-========================= */
+            renderPieces(
+                window.lastMyPieces,
+                window.lastOpponentPieces
+            );
 
-function startTimer() {
+        }
 
-    stopTimer();
+    }
+);
 
-    timeLeft = 15;
+socket.on(
+    "capture",
+    data => {
 
-    document
-        .getElementById("timer")
-        .textContent = timeLeft;
+        captureEffect();
 
-    timerInterval =
-        setInterval(() => {
+        document.getElementById(
+            "gameMessage"
+        ).textContent =
+            `💥 ${data.player} مهره حریف را زد!`;
 
-            timeLeft--;
+    }
+);
 
-            document
-                .getElementById("timer")
-                .textContent = timeLeft;
+socket.on(
+    "chatMessage",
+    data => {
 
-            if (timeLeft <= 0) {
+        addChat(
+            data.name,
+            data.color,
+            data.message
+        );
 
-                stopTimer();
+        if(
+            soundEnabled &&
+            data.color !== myColor
+        ){
 
-                timeUp();
+            tone(
+                700,
+                .08,
+                "sine",
+                .04
+            );
 
-            }
+        }
 
-        }, 1000);
+    }
+);
 
-}
+socket.on(
+    "emoji",
+    data => {
 
+        addChat(
+            data.name,
+            data.color,
+            data.emoji
+        );
 
-function stopTimer() {
+        if(
+            data.color !== myColor
+        ){
 
-    if (timerInterval) {
+            tone(
+                650,
+                .08,
+                "sine",
+                .03
+            );
 
-        clearInterval(timerInterval);
+        }
 
-        timerInterval = null;
+    }
+);
+
+socket.on(
+    "winner",
+    data => {
+
+        const isMe =
+            data.color ===
+            myColor;
+
+        document.getElementById(
+            "winTitle"
+        ).textContent =
+            isMe
+                ? "🏆 تو برنده شدی!"
+                : "😄 این بار حریف برنده شد!";
+
+        document.getElementById(
+            "winText"
+        ).innerHTML =
+            isMe
+                ? `
+                  🎉 تبریک می‌گم
+                  <b>${escapeHtml(data.winner)}</b>!
+                  <br>
+                  فوق‌العاده بازی کردی! 🔥
+                  <br>
+                  هر چهار مهره‌ات را به مقصد رساندی
+                  و پیروز این نبرد شدی! 🏆
+                  `
+                : `
+                  🎲 بازی تمام شد!
+                  <br>
+                  <b>${escapeHtml(data.winner)}</b>
+                  این مسابقه را برد.
+                  <br>
+                  نگران نباش؛ بازی بعدی می‌تونه مال تو باشه! 💪🔥
+                  `;
+
+        document.getElementById(
+            "winOverlay"
+        ).classList
+        .remove("hidden");
+
+        if(isMe){
+
+            confetti();
+            winSound();
+
+        }
+
+    }
+);
+
+socket.on(
+    "opponentLeft",
+    () => {
+
+        document.getElementById(
+            "status"
+        ).textContent =
+            "🚪 حریف از بازی خارج شد.";
+
+        document.getElementById(
+            "gameMessage"
+        ).textContent =
+            "حریف اتصالش را قطع کرد.";
+
+    }
+);
+
+socket.on(
+    "errorMessage",
+    data => {
+
+        alert(
+            data.message
+        );
+
+    }
+);
+
+document.getElementById(
+    "sendBtn"
+).onclick =
+sendChat;
+
+document.getElementById(
+    "chatInput"
+).addEventListener(
+    "keydown",
+    event => {
+
+        if(
+            event.key ===
+            "Enter"
+        ){
+
+            event.preventDefault();
+
+            sendChat();
+
+        }
+
+    }
+);
+
+document.getElementById(
+    "rollBtn"
+).onclick =
+function(){
+
+    if(
+        !myTurn ||
+        currentDice !== null ||
+        !gameStarted
+    ){
+
+        return;
 
     }
 
-}
+    socket.emit(
+        "rollDice"
+    );
 
+};
 
-function timeUp() {
+document.getElementById(
+    "soundBtn"
+).onclick =
+function(){
 
-    document
-        .querySelectorAll(".answer")
-        .forEach(btn => {
+    soundEnabled =
+        !soundEnabled;
 
-            btn.disabled = true;
+    this.textContent =
+        soundEnabled
+            ? "🔊"
+            : "🔇";
 
-        });
+    if(soundEnabled){
 
-    addLog("⏰ زمان تمام شد!");
-
-    if (socket) {
-
-        socket.emit("timeUp", {
-
-            roomCode: roomCode
-
-        });
-
-    }
-
-}
-
-
-/* =========================
-   POWER RESULT
-========================= */
-
-if (socket) {
-
-socket.on("powerResult", data => {
-
-    if (data.myHP !== undefined) {
-
-        myHP = data.myHP;
-
-        updateHP(
-            "myHp",
-            "myHpText",
-            myHP
+        tone(
+            700,
+            .12,
+            "sine",
+            .04
         );
 
     }
 
-    if (data.enemyHP !== undefined) {
+};
 
-        enemyHP = data.enemyHP;
-
-        updateHP(
-            "enemyHp",
-            "enemyHpText",
-            enemyHP
-        );
-
-    }
-
-    if (data.message) {
-
-        addLog(data.message);
-
-    }
-
-});
-
-}
-
-
-/* =========================
-   GAME OVER
-========================= */
-
-if (socket) {
-
-socket.on("gameOver", data => {
-
-    stopTimer();
-
-    document
-        .getElementById("game")
-        .classList.add("hidden");
-
-    document
-        .getElementById("gameOver")
-        .classList.remove("hidden");
-
-    if (data.winner === true) {
-
-        document
-            .getElementById("winnerText")
-            .textContent =
-            "🏆 تو برنده شدی!";
-
-        document
-            .getElementById("resultText")
-            .textContent =
-            "تبریک! حریفت را شکست دادی.";
-
-    } else {
-
-        document
-            .getElementById("winnerText")
-            .textContent =
-            "😔 باختی!";
-
-        document
-            .getElementById("resultText")
-            .textContent =
-            "این بار نشد؛ دوباره امتحان کن.";
-
-    }
-
-});
-
-}
-
-
-/* =========================
-   UPDATE HP
-========================= */
-
-function updateHP(bar, text, value) {
-
-    value =
-        Math.max(0, Math.min(100, value));
-
-    document
-        .getElementById(bar)
-        .style.width = value + "%";
-
-    document
-        .getElementById(text)
-        .textContent = value;
-
-}
-
-
-/* =========================
-   STATUS
-========================= */
-
-function setStatus(text) {
-
-    document
-        .getElementById("status")
-        .textContent = text;
-
-}
-
-
-/* =========================
-   LOG
-========================= */
-
-function addLog(text) {
-
-    const log =
-        document.getElementById("battleLog");
-
-    const line =
-        document.createElement("div");
-
-    line.textContent = text;
-
-    log.appendChild(line);
-
-    log.scrollTop =
-        log.scrollHeight;
-
-}
-
-
-/* =========================
-   TELEGRAM INVITE
-========================= */
-
-function inviteTelegram() {
+document.getElementById(
+    "inviteBtn"
+).onclick =
+function(){
 
     const url =
-        window.location.origin +
+        location.origin +
         "?room=" +
-        encodeURIComponent(roomCode);
+        encodeURIComponent(
+            roomCode
+        );
 
     const text =
-        "⚔️ بیا با هم Battle Arena بازی کنیم!\n" +
-        "کد اتاق: " +
-        roomCode;
+        "🎲 بیا با هم منچ آنلاین بازی کنیم! 🔥";
 
     const telegram =
         "https://t.me/share/url?url=" +
@@ -1336,28 +2100,49 @@ function inviteTelegram() {
         "_blank"
     );
 
+};
+
+document.getElementById(
+    "againBtn"
+).onclick =
+function(){
+
+    location.reload();
+
+};
+
+function escapeHtml(text){
+
+    return String(text)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
 }
 
-
-/* =========================
-   AUTO ROOM FROM URL
-========================= */
-
-const params =
+const urlParams =
     new URLSearchParams(
-        window.location.search
+        location.search
     );
 
-const invitedRoom =
-    params.get("room");
+const roomFromUrl =
+    urlParams.get("room");
 
-if (invitedRoom) {
+if(roomFromUrl){
 
-    document
-        .getElementById("roomInput")
-        .value = invitedRoom;
+    document.getElementById(
+        "roomInput"
+    ).value =
+        roomFromUrl
+        .toUpperCase();
 
 }
+
+createBoard();
+
+createEmojiButtons();
 
 </script>
 
