@@ -889,9 +889,22 @@ function answerQuestion(index) {
    ANSWER RESULT
 ========================= */
 
-if (socket) {
+if (socket) 
 
 socket.on("answerResult", data => {
+
+    const buttons =
+        document.querySelectorAll(".answer");
+
+    buttons.forEach((button, index) => {
+
+        button.disabled = true;
+
+        if (index === data.correctIndex) {
+            button.classList.add("correct");
+        }
+
+    });
 
     if (data.correct) {
 
@@ -901,8 +914,10 @@ socket.on("answerResult", data => {
             .getElementById("myCombo")
             .textContent = myCombo;
 
+        setStatus("✅ پاسخ درست!");
+
         addLog(
-            "✅ پاسخ درست! Combo: " + myCombo
+            "✅ آفرین! پاسخ درست بود."
         );
 
     } else {
@@ -913,7 +928,19 @@ socket.on("answerResult", data => {
             .getElementById("myCombo")
             .textContent = 0;
 
-        addLog("❌ پاسخ اشتباه!");
+        buttons.forEach((button, index) => {
+
+            if (index !== data.correctIndex) {
+                button.classList.add("wrong");
+            }
+
+        });
+
+        setStatus("❌ پاسخ غلط!");
+
+        addLog(
+            "❌ پاسخ اشتباه بود."
+        );
 
     }
 
@@ -926,7 +953,6 @@ socket.on("answerResult", data => {
     }
 
 });
-
 }
 
 
