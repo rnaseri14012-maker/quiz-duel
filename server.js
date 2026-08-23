@@ -506,6 +506,7 @@ io.on("connection", (socket) => {
 
     });
 
+    
 
     /* ANSWER */
 
@@ -551,7 +552,10 @@ io.on("connection", (socket) => {
             socket.emit(
                 "answerResult",
                 {
-                    correct: true,
+                    
+              
+                correct: true,
+                    correctIndex: question.correct
                     damage: 0
                 }
             );
@@ -562,6 +566,7 @@ io.on("connection", (socket) => {
                 "answerResult",
                 {
                     correct: false,
+                    correctIndex: question.correct
                     damage: 0
                 }
             );
