@@ -1,770 +1,810 @@
 const express = require("express");
+
 const http = require("http");
 const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-
 const io = new Server(server);
 
 app.use(express.static("public"));
 
-const rooms = {};
+const rooms = new Map();
 
-const questions = [
-    {
-        q: "مهربان‌ترین مرد نیشابور کیست؟",
-        a: ["رضا", "جعفرآقا", "اصغر آقا", "اکبرآباد"],
-        correct: 0
-    },
-    {
-        q: "باهوش‌ترین دختر نیشابور کیست؟",
-        a: ["صغرا", "ژینا", "رقیه", "کبری"],
-        correct: 2
-    },
-    {
-        q: "کدام سیاره به سیاره سرخ معروف است؟",
-        a: ["زهره", "مریخ", "عطارد", "نپتون"],
-        correct: 1
-    },
-    {
-        q: "بزرگ‌ترین اقیانوس جهان کدام است؟",
-        a: ["اطلس", "هند", "آرام", "منجمد شمالی"],
-        correct: 2
-    },
-    {
-        q: "سریع‌ترین حیوان خشکی کدام است؟",
-        a: ["شیر", "یوزپلنگ", "اسب", "گرگ"],
-        correct: 1
-    },
-    {
-        q: "چند قاره در جهان وجود دارد؟",
-        a: ["5", "6", "7", "8"],
-        correct: 2
-    },
-    {
-        q: "آب در چند درجه سانتی‌گراد یخ می‌زند؟",
-        a: ["0", "10", "50", "100"],
-        correct: 0
-    },
-    {
-        q: "بزرگ‌ترین قاره جهان کدام است؟",
-        a: ["آفریقا", "اروپا", "آسیا", "استرالیا"],
-        correct: 2
-    },
-    {
-        q: "نزدیک‌ترین سیاره به خورشید کدام است؟",
-        a: ["زمین", "مریخ", "عطارد", "زهره"],
-        correct: 2
-    },
-    {
-        q: "ماهواره طبیعی زمین چیست؟",
-        a: ["خورشید", "ماه", "مریخ", "زهره"],
-        correct: 1
-    }
-];
+const PATH_LENGTH = 52;
+const FINISH = 56;
+const HOME = -1;
 
+const COLORS = ["red", "blue"];
 
-/* =========================
-   FUNCTIONS
-========================= */
+function createRoomCode() {
+    let code;
 
-function sendQuestion(room) {
+    do {
+        code = Math.random()
+            .toString(36)
+            .substring(2, 8)
+            .toUpperCase();
+    } while (rooms.has(code));
 
-    if (!room || room.players.length < 2) {
-        return;
-    }
-
-    if (room.timer) {
-        clearInterval(room.timer);
-    }
-
-    const question = questions[room.question];
-
-    room.answers = {};
-    room.timeLeft = 15;
-
-    io.to(room.id).emit("newQuestion", {
-        id: room.question,
-        question: question.q,
-        answers: question.a,
-        time: 15
-    });
-
-    room.timer = setInterval(() => {
-
-        room.timeLeft--;
-
-        io.to(room.id).emit("timer", {
-            time: room.timeLeft
-        });
-
-        if (room.timeLeft <= 0) {
-
-            clearInterval(room.timer);
-            room.timer = null;
-
-            io.to(room.id).emit("timeUp");
-
-            finishQuestion(room);
-        }
-
-    }, 1000);
+    return code;
 }
 
+function createPlayer(socket, name, color) {
+    return {
+        socketId: socket.id,
+        name: name || "بازیکن",
+        color,
+        pieces: [HOME, HOME, HOME, HOME]
+    };
+}
 
-function finishQuestion(room) {
-
-    if (!room || room.finishedQuestion) {
-        return;
+function send(socket, type, data = {}) {
+    if (socket && socket.connected) {
+        socket.emit(type, data);
     }
+}
 
-    room.finishedQuestion = true;
-
-    if (room.timer) {
-        clearInterval(room.timer);
-        room.timer = null;
-    }
-
-    const question = questions[room.question];
-
-    const results = [];
-
-    for (let i = 0; i < 2; i++) {
-
-        const answer = room.answers[i];
-
-        const correct =
-            answer !== undefined &&
-            Number(answer) === question.correct;
-
-        results.push(correct);
-
-        if (correct) {
-
-            room.players[i].combo++;
-
-            const damage =
-                10 + Math.min(
-                    room.players[i].combo * 2,
-                    20
-                );
-
-            const opponent = room.players[1 - i];
-
-            if (!opponent.shield) {
-
-                opponent.hp -= damage;
-
-                if (opponent.hp < 0) {
-                    opponent.hp = 0;
-                }
-
-            } else {
-
-                opponent.shield = false;
-
-                io.to(room.players[1 - i].socketId)
-                    .emit("powerResult", {
-                        message: "🛡️ Shield حمله را خنثی کرد!"
-                    });
-            }
-
-            io.to(room.players[i].socketId)
-                .emit("answerResult", {
-                    correct: true,
-                    damage: damage
-                });
-
-        } else {
-
-            room.players[i].combo = 0;
-
-            io.to(room.players[i].socketId)
-                .emit("answerResult", {
-                    correct: false,
-                    damage: 0
-                });
-        }
-    }
-
-
-    /* HP UPDATE */
-
-    io.to(room.id).emit("hpUpdate", {
-
-        myHP: undefined,
-        enemyHP: undefined
-
+function broadcast(room, type, data = {}) {
+    room.players.forEach(player => {
+        send(player.socket, type, data);
     });
+}
+
+function getRoom(socket) {
+    return rooms.get(socket.data.roomCode);
+}
+
+function getPlayerIndex(socket) {
+    return socket.data.playerIndex;
+}
+
+function getOpponentIndex(playerIndex) {
+    return playerIndex === 0 ? 1 : 0;
+}
+
+function isFinished(player) {
+    return player.pieces.every(
+        position => position === FINISH
+    );
+}
+
+function canMove(room, playerIndex, pieceIndex) {
+    const player = room.players[playerIndex];
+
+    if (!player) {
+        return false;
+    }
+
+    const dice = room.dice;
+    const position = player.pieces[pieceIndex];
+
+    if (dice === null) {
+        return false;
+    }
+
+    if (position === FINISH) {
+        return false;
+    }
+
+    // مهره داخل خانه فقط با 6 بیرون می‌آید
+    if (position === HOME) {
+        return dice === 6;
+    }
+
+    return position + dice <= FINISH;
+}
+
+function hasMovablePiece(room, playerIndex) {
+    const player = room.players[playerIndex];
+
+    if (!player || room.dice === null) {
+        return false;
+    }
+
+    return player.pieces.some(
+        (_, index) =>
+            canMove(room, playerIndex, index)
+    );
+}
+
+function sendState(room) {
 
     room.players.forEach((player, index) => {
 
         const opponent =
-            room.players[1 - index];
+            room.players[getOpponentIndex(index)];
 
-        io.to(player.socketId).emit("hpUpdate", {
+        send(player.socket, "gameState", {
 
-            myHP: player.hp,
-            enemyHP: opponent.hp
+            roomCode: room.code,
 
-        });
+            myColor: player.color,
 
-        io.to(player.socketId).emit("powerResult", {
+            myName: player.name,
 
-            myHP: player.hp,
-            enemyHP: opponent.hp
+            opponentName:
+                opponent
+                    ? opponent.name
+                    : "در انتظار بازیکن",
+
+            myPieces: [...player.pieces],
+
+            opponentPieces:
+                opponent
+                    ? [...opponent.pieces]
+                    : [],
+
+            turn: room.turn,
+
+            myTurn:
+                room.turn === index,
+
+            dice: room.dice,
+
+            gameStarted: room.started,
+
+            winner: room.winner
 
         });
 
     });
+}
 
+function nextTurn(room, playerIndex) {
 
-    /* GAME OVER */
+    const player =
+        room.players[playerIndex];
 
+    // با 6 نوبت دوباره همان بازیکن است
+    if (room.dice === 6) {
+        room.dice = null;
+        sendState(room);
+        return;
+    }
+
+    room.dice = null;
+
+    room.turn =
+        getOpponentIndex(playerIndex);
+
+    sendState(room);
+}
+
+function movePiece(room, playerIndex, pieceIndex) {
+
+    const player =
+        room.players[playerIndex];
+
+    const opponentIndex =
+        getOpponentIndex(playerIndex);
+
+    const opponent =
+        room.players[opponentIndex];
+
+    const dice =
+        room.dice;
+
+    const oldPosition =
+        player.pieces[pieceIndex];
+
+    let newPosition;
+
+    // خروج از خانه
+    if (oldPosition === HOME) {
+        newPosition = 0;
+    } else {
+        newPosition = oldPosition + dice;
+    }
+
+    player.pieces[pieceIndex] =
+        newPosition;
+
+    let captured = false;
+
+    /*
+     * زدن مهره حریف
+     * فقط روی مسیر اصلی
+     */
     if (
-        room.players[0].hp <= 0 ||
-        room.players[1].hp <= 0
+        newPosition >= 0 &&
+        newPosition < PATH_LENGTH
     ) {
 
-        finishGame(room);
-        return;
+        opponent.pieces =
+            opponent.pieces.map(position => {
+
+                if (position === newPosition) {
+
+                    captured = true;
+
+                    return HOME;
+                }
+
+                return position;
+            });
+
     }
 
+    broadcast(room, "pieceMoved", {
 
-    /* NEXT QUESTION */
+        playerIndex,
 
-    setTimeout(() => {
+        pieceIndex,
 
-        if (!rooms[room.id]) {
-            return;
-        }
+        oldPosition,
 
-        room.question++;
+        newPosition,
 
-        if (room.question >= questions.length) {
+        captured
 
-            finishGame(room);
-            return;
-        }
+    });
 
-        room.finishedQuestion = false;
+    if (captured) {
 
-        sendQuestion(room);
+        broadcast(room, "capture", {
 
-    }, 2000);
-}
+            player:
+                player.name,
 
-
-function finishGame(room) {
-
-    if (!room) {
-        return;
-    }
-
-    if (room.timer) {
-        clearInterval(room.timer);
-        room.timer = null;
-    }
-
-    let winner = -1;
-
-    if (room.players[0].hp > room.players[1].hp) {
-        winner = 0;
-    }
-
-    if (room.players[1].hp > room.players[0].hp) {
-        winner = 1;
-    }
-
-    room.players.forEach((player, index) => {
-
-        io.to(player.socketId).emit("gameOver", {
-
-            winner: winner === index,
-
-            scores: room.players.map(
-                p => p.hp
-            )
+            color:
+                player.color
 
         });
 
-    });
+    }
+
+    /*
+     * بررسی برد
+     */
+    if (isFinished(player)) {
+
+        room.winner =
+            playerIndex;
+
+        room.started = false;
+
+        room.dice = null;
+
+        broadcast(room, "winner", {
+
+            winner:
+                player.name,
+
+            color:
+                player.color,
+
+            loser:
+                opponent.name
+
+        });
+
+        sendState(room);
+
+        return;
+    }
+
+    /*
+     * حرکت مجاز انجام شد.
+     * اگر 6 یا زدن مهره باشد،
+     * نوبت دوباره به همان بازیکن می‌رسد.
+     */
+
+    if (
+        dice === 6 ||
+        captured
+    ) {
+
+        room.dice = null;
+
+    } else {
+
+        room.dice = null;
+
+        room.turn =
+            opponentIndex;
+    }
+
+    sendState(room);
 }
 
 
-/* =========================
-   SOCKET.IO
-========================= */
+/*
+========================================
+اتصال بازیکن
+========================================
+*/
 
-io.on("connection", (socket) => {
+io.on("connection", socket => {
 
-    console.log("Player connected:", socket.id);
+    console.log(
+        "Player connected:",
+        socket.id
+    );
 
 
-    /* CREATE ROOM */
+    /*
+    ========================================
+    ساخت اتاق
+    ========================================
+    */
 
-    socket.on("createRoom", (data) => {
+    socket.on("createRoom", data => {
 
         const roomCode =
-            Math.random()
-                .toString(36)
-                .substring(2, 8)
-                .toUpperCase();
+            createRoomCode();
 
-        rooms[roomCode] = {
+        const name =
+            String(
+                data?.name || "بازیکن ۱"
+            )
+            .trim()
+            .substring(0, 20);
 
-            id: roomCode,
+        const room = {
+
+            code: roomCode,
 
             players: [],
 
-            question: 0,
+            turn: 0,
 
-            answers: {},
+            dice: null,
 
-            timeLeft: 15,
+            started: false,
 
-            timer: null,
-
-            finishedQuestion: false
-        };
-
-
-        const player = {
-
-            socketId: socket.id,
-
-            name:
-                data.name ||
-                "بازیکن ۱",
-
-            hp: 100,
-
-            combo: 0,
-
-            shield: false,
-
-            doubleAttack: false,
-
-            powers: {
-
-                shield: true,
-
-                double: true,
-
-                fifty: true,
-
-                heal: true,
-
-                fast: true
-
-            }
+            winner: null
 
         };
 
+        const player =
+            createPlayer(
+                socket,
+                name,
+                COLORS[0]
+            );
 
-        rooms[roomCode].players.push(player);
+        room.players.push(player);
+
+        rooms.set(
+            roomCode,
+            room
+        );
 
         socket.join(roomCode);
 
-        socket.roomCode = roomCode;
+        socket.data.roomCode =
+            roomCode;
 
-        socket.playerIndex = 0;
+        socket.data.playerIndex =
+            0;
 
+        send(
+            socket,
+            "roomCreated",
+            {
+                roomCode
+            }
+        );
 
-        socket.emit("roomCreated", {
-
-            roomCode: roomCode
-
-        });
-
+        sendState(room);
 
         console.log(
             "Room created:",
             roomCode
         );
+
     });
 
 
-    /* JOIN ROOM */
+    /*
+    ========================================
+    ورود بازیکن دوم
+    ========================================
+    */
 
-    socket.on("joinRoom", (data) => {
+    socket.on("joinRoom", data => {
 
         const roomCode =
-            String(data.roomCode || "")
-                .toUpperCase();
+            String(
+                data?.roomCode || ""
+            )
+            .trim()
+            .toUpperCase();
 
         const room =
-            rooms[roomCode];
-
+            rooms.get(roomCode);
 
         if (!room) {
 
-            socket.emit("error", {
-
-                message:
-                    "این اتاق پیدا نشد."
-
-            });
+            send(
+                socket,
+                "errorMessage",
+                {
+                    message:
+                        "❌ اتاق پیدا نشد."
+                }
+            );
 
             return;
         }
-
 
         if (room.players.length >= 2) {
 
-            socket.emit("error", {
-
-                message:
-                    "این اتاق پر است."
-
-            });
+            send(
+                socket,
+                "errorMessage",
+                {
+                    message:
+                        "❌ این اتاق پر است."
+                }
+            );
 
             return;
         }
 
+        const name =
+            String(
+                data?.name || "بازیکن ۲"
+            )
+            .trim()
+            .substring(0, 20);
 
-        const player = {
-
-            socketId: socket.id,
-
-            name:
-                data.name ||
-                "بازیکن ۲",
-
-            hp: 100,
-
-            combo: 0,
-
-            shield: false,
-
-            doubleAttack: false,
-
-            powers: {
-
-                shield: true,
-
-                double: true,
-
-                fifty: true,
-
-                heal: true,
-
-                fast: true
-
-            }
-
-        };
-
+        const player =
+            createPlayer(
+                socket,
+                name,
+                COLORS[1]
+            );
 
         room.players.push(player);
 
         socket.join(roomCode);
 
-        socket.roomCode = roomCode;
+        socket.data.roomCode =
+            roomCode;
 
-        socket.playerIndex = 1;
+        socket.data.playerIndex =
+            1;
 
+        room.started = true;
 
-        io.to(roomCode).emit("playerJoined", {
+        room.turn = 0;
 
-            enemyName:
-                player.name
+        room.dice = null;
 
-        });
+        room.winner = null;
 
-
-        /* START */
-
-        setTimeout(() => {
-
-            if (
-                rooms[roomCode] &&
-                room.players.length === 2
-            ) {
-
-                room.players.forEach(
-                    (p, index) => {
-
-                        io.to(p.socketId)
-                            .emit("gameStart", {
-
-                                enemyName:
-                                    room.players[
-                                        1 - index
-                                    ].name
-
-                            });
-
-                    }
-                );
-
-                sendQuestion(room);
+        broadcast(
+            room,
+            "gameStarted",
+            {
+                message:
+                    "🎲 بازی شروع شد!"
             }
-
-        }, 1000);
-
-    });
-
-    
-
-    /* ANSWER */
-
-    socket.on("answer", (data) => {
-
-        const room =
-            rooms[socket.roomCode];
-
-        if (!room) {
-            return;
-        }
-
-        const index =
-            socket.playerIndex;
-
-
-        if (
-            room.answers[index] !== undefined
-        ) {
-
-            return;
-        }
-
-
-        room.answers[index] =
-            Number(data.answer);
-
-
-        socket.emit(
-            "answerReceived"
         );
 
+        sendState(room);
 
-        const question =
-            questions[room.question];
-
-
-        if (
-            Number(data.answer) ===
-            question.correct
-        ) {
-
-            socket.emit(
-                "answerResult",
-                {
-                    
-              
-                correct: true,
-                    correctIndex: question.correct
-                    damage: 0
-                }
-            );
-
-        } else {
-
-            socket.emit(
-                "answerResult",
-                {
-                    correct: false,
-                    correctIndex: question.correct
-                    damage: 0
-                }
-            );
-        }
-
-
-        if (
-            room.answers[0] !== undefined &&
-            room.answers[1] !== undefined
-        ) {
-
-            finishQuestion(room);
-
-        }
+        console.log(
+            "Player joined room:",
+            roomCode
+        );
 
     });
 
 
-    /* TIME UP */
+    /*
+    ========================================
+    انداختن تاس
+    ========================================
+    */
 
-    socket.on("timeUp", () => {
+    socket.on("rollDice", () => {
 
         const room =
-            rooms[socket.roomCode];
+            getRoom(socket);
 
         if (!room) {
             return;
         }
 
+        const playerIndex =
+            getPlayerIndex(socket);
+
         if (
-            room.answers[0] !== undefined &&
-            room.answers[1] !== undefined
+            !room.started ||
+            room.winner !== null
+        ) {
+            return;
+        }
+
+        if (
+            room.turn !== playerIndex
         ) {
 
-            finishQuestion(room);
+            send(
+                socket,
+                "errorMessage",
+                {
+                    message:
+                        "⏳ الان نوبت تو نیست."
+                }
+            );
 
+            return;
         }
+
+        // جلوگیری از دوبار تاس انداختن
+        if (room.dice !== null) {
+            return;
+        }
+
+        const dice =
+            Math.floor(
+                Math.random() * 6
+            ) + 1;
+
+        room.dice = dice;
+
+        broadcast(
+            room,
+            "diceRolled",
+            {
+                playerIndex,
+                dice
+            }
+        );
+
+        /*
+         * اگر مهره‌ای قابل حرکت نیست،
+         * بعد از کمی تأخیر نوبت عوض شود.
+         */
+
+        if (
+            !hasMovablePiece(
+                room,
+                playerIndex
+            )
+        ) {
+
+            send(
+                socket,
+                "noMove",
+                {
+                    dice
+                }
+            );
+
+            setTimeout(() => {
+
+                if (
+                    !room.started ||
+                    room.dice !== dice
+                ) {
+                    return;
+                }
+
+                nextTurn(
+                    room,
+                    playerIndex
+                );
+
+            }, 1200);
+
+            return;
+        }
+
+        sendState(room);
 
     });
 
 
-    /* POWERS */
+    /*
+    ========================================
+    حرکت مهره
+    ========================================
+    */
 
-    socket.on("usePower", (data) => {
+    socket.on("movePiece", data => {
 
         const room =
-            rooms[socket.roomCode];
+            getRoom(socket);
 
         if (!room) {
             return;
         }
+
+        const playerIndex =
+            getPlayerIndex(socket);
+
+        if (
+            !room.started ||
+            room.winner !== null
+        ) {
+            return;
+        }
+
+        if (
+            room.turn !== playerIndex
+        ) {
+            return;
+        }
+
+        if (room.dice === null) {
+            return;
+        }
+
+        const pieceIndex =
+            Number(
+                data?.pieceIndex
+            );
+
+        if (
+            !Number.isInteger(pieceIndex) ||
+            pieceIndex < 0 ||
+            pieceIndex > 3
+        ) {
+            return;
+        }
+
+        if (
+            !canMove(
+                room,
+                playerIndex,
+                pieceIndex
+            )
+        ) {
+
+            send(
+                socket,
+                "errorMessage",
+                {
+                    message:
+                        "❌ این مهره قابل حرکت نیست."
+                }
+            );
+
+            return;
+        }
+
+        movePiece(
+            room,
+            playerIndex,
+            pieceIndex
+        );
+
+    });
+
+
+    /*
+    ========================================
+    چت
+    ========================================
+    */
+
+    socket.on("chatMessage", data => {
+
+        const room =
+            getRoom(socket);
+
+        if (!room) {
+            return;
+        }
+
+        const playerIndex =
+            getPlayerIndex(socket);
 
         const player =
-            room.players[socket.playerIndex];
+            room.players[playerIndex];
 
-        const power =
-            data.power;
-
-
-        if (!player.powers[power]) {
-
-            socket.emit("powerResult", {
-
-                message:
-                    "❌ این قدرت قبلاً استفاده شده."
-
-            });
-
+        if (!player) {
             return;
         }
 
+        const message =
+            String(
+                data?.message || ""
+            )
+            .trim()
+            .substring(0, 200);
 
-        player.powers[power] = false;
-
-
-        /* SHIELD */
-
-        if (power === "shield") {
-
-            player.shield = true;
-
-            socket.emit("powerResult", {
-
-                message:
-                    "🛡️ Shield فعال شد!"
-
-            });
-
+        if (!message) {
             return;
         }
 
+        broadcast(
+            room,
+            "chatMessage",
+            {
+                name:
+                    player.name,
 
-        /* HEAL */
+                color:
+                    player.color,
 
-        if (power === "heal") {
-
-            player.hp += 20;
-
-            if (player.hp > 100) {
-                player.hp = 100;
+                message
             }
-
-            socket.emit("powerResult", {
-
-                myHP: player.hp,
-
-                enemyHP:
-                    room.players[
-                        1 - socket.playerIndex
-                    ].hp,
-
-                message:
-                    "💚 20 HP بازیابی شد!"
-
-            });
-
-            return;
-        }
-
-
-        /* DOUBLE ATTACK */
-
-        if (power === "double") {
-
-            player.doubleAttack = true;
-
-            socket.emit("powerResult", {
-
-                message:
-                    "⚔️ Double Attack آماده شد!"
-
-            });
-
-            return;
-        }
-
-
-        /* FAST ATTACK */
-
-        if (power === "fast") {
-
-            const opponent =
-                room.players[
-                    1 - socket.playerIndex
-                ];
-
-            if (!opponent.shield) {
-
-                opponent.hp -= 10;
-
-                if (opponent.hp < 0) {
-                    opponent.hp = 0;
-                }
-
-            } else {
-
-                opponent.shield = false;
-            }
-
-            socket.emit("powerResult", {
-
-                message:
-                    "⚡ حمله سریع انجام شد!"
-
-            });
-
-
-            room.players.forEach(
-                (p, index) => {
-
-                    io.to(p.socketId)
-                        .emit("hpUpdate", {
-
-                            myHP: p.hp,
-
-                            enemyHP:
-                                room.players[
-                                    1 - index
-                                ].hp
-
-                        });
-
-                }
-            );
-
-
-            if (opponent.hp <= 0) {
-
-                finishGame(room);
-
-            }
-
-        }
+        );
 
     });
 
 
-    /* DISCONNECT */
+    /*
+    ========================================
+    ایموجی سریع
+    ========================================
+    */
+
+    socket.on("emoji", data => {
+
+        const room =
+            getRoom(socket);
+
+        if (!room) {
+            return;
+        }
+
+        const playerIndex =
+            getPlayerIndex(socket);
+
+        const player =
+            room.players[playerIndex];
+
+        if (!player) {
+            return;
+        }
+
+        const allowed =
+            [
+                "😂",
+                "😎",
+                "🔥",
+                "😱",
+                "👏",
+                "😍",
+                "🎉",
+                "😭",
+                "🤣",
+                "😡",
+                "👍",
+                "❤️",
+                "🎲"
+            ];
+
+        const emoji =
+            String(
+                data?.emoji || ""
+            );
+
+        if (
+            !allowed.includes(emoji)
+        ) {
+            return;
+        }
+
+        broadcast(
+            room,
+            "emoji",
+            {
+                name:
+                    player.name,
+
+                color:
+                    player.color,
+
+                emoji
+            }
+        );
+
+    });
+
+
+    /*
+    ========================================
+    قطع اتصال
+    ========================================
+    */
 
     socket.on("disconnect", () => {
 
@@ -773,47 +813,39 @@ io.on("connection", (socket) => {
             socket.id
         );
 
-
-        const roomCode =
-            socket.roomCode;
-
-        if (!roomCode) {
-            return;
-        }
-
-
         const room =
-            rooms[roomCode];
+            getRoom(socket);
 
         if (!room) {
             return;
         }
 
+        const playerIndex =
+            getPlayerIndex(socket);
 
-        io.to(roomCode).emit(
-            "opponentLeft"
-        );
+        const opponentIndex =
+            getOpponentIndex(
+                playerIndex
+            );
 
+        const opponent =
+            room.players[opponentIndex];
 
-        if (room.timer) {
+        if (opponent) {
 
-            clearInterval(
-                room.timer
+            send(
+                opponent.socket,
+                "opponentLeft"
             );
 
         }
 
-
-        delete rooms[roomCode];
+        rooms.delete(room.code);
 
     });
 
 });
 
-
-/* =========================
-   SERVER
-========================= */
 
 const PORT =
     process.env.PORT || 3000;
@@ -823,8 +855,8 @@ server.listen(
     () => {
 
         console.log(
-            "Battle Arena server started on port "
-            + PORT
+            "🎲 Online Ludo server started on port " +
+            PORT
         );
 
     }
