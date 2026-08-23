@@ -1,7 +1,7 @@
 {
-  "name": "ludo-online",
+  "name": "ludo-battle-online",
   "version": "1.0.0",
-  "description": "Online two player Ludo game",
+  "description": "Ludo Battle Online",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
